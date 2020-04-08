@@ -85,6 +85,10 @@ func (s *movieRecord) convertLineParts(line []string) {
 		}
 	}
 
+	// This is json in the data set:
+	//   [{'id': 28, 'name': 'Action'},
+	//    {'id': 18, 'name': 'Drama'},
+	//    {'id': 53, 'name': 'Thriller'}]
 	s.genres = line[3]
 	s.homepage = line[4]
 	{
@@ -107,7 +111,11 @@ func (s *movieRecord) convertLineParts(line []string) {
 	}
 
 	s.posterPath = line[11]
+
 	s.productionCompanies = line[12]
+
+	// This field is json in the data set:
+	//   [{'iso_3166_1': 'GB', 'name': 'United Kingdom'}]
 	s.productionCountries = line[13]
 	s.releaseDate = line[14] // TODO: unix timestamps?
 
@@ -125,6 +133,8 @@ func (s *movieRecord) convertLineParts(line []string) {
 		}
 	}
 
+	// This field is actually json in the data set:
+	//  [{'iso_639_1': 'en', 'name': 'English'}]
 	s.spokenLanguages = line[17]
 	s.status = line[18]
 	s.tagline = line[19]
@@ -227,4 +237,22 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 	}
 
 	return nil
+}
+
+func minifyGenreJson(line string) string {
+	type genre struct {
+		Id   uint64 `json:"id"`
+		Name string `json:"name"`
+	}
+
+	var genres []genre
+	err := json.Unmarshall([]byte(line), &genres)
+
+	var names []string
+
+	for _, el := range genres {
+		names = append(names, el)
+	}
+
+	return strings.Join(names, ",")
 }
