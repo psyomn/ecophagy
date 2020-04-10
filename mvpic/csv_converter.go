@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -89,7 +92,7 @@ func (s *movieRecord) convertLineParts(line []string) {
 	//   [{'id': 28, 'name': 'Action'},
 	//    {'id': 18, 'name': 'Drama'},
 	//    {'id': 53, 'name': 'Thriller'}]
-	s.genres = line[3]
+	s.genres = minifyNameJson(line[3])
 	s.homepage = line[4]
 	{
 		id, err := strconv.ParseUint(line[5], 10, 64)
@@ -112,11 +115,15 @@ func (s *movieRecord) convertLineParts(line []string) {
 
 	s.posterPath = line[11]
 
-	s.productionCompanies = line[12]
+	// Production companies:
+	//   [{'name': 'Miramax Films', 'id': 14},
+	//    {'name': 'A Band Apart', 'id': 59}]
+	s.productionCompanies = minifyNameJson(line[12])
 
 	// This field is json in the data set:
-	//   [{'iso_3166_1': 'GB', 'name': 'United Kingdom'}]
-	s.productionCountries = line[13]
+	//   [{'iso_3166_1': 'GB',
+	//     'name': 'United Kingdom'}]
+	s.productionCountries = minifyNameJson(line[13])
 	s.releaseDate = line[14] // TODO: unix timestamps?
 
 	{
@@ -134,8 +141,10 @@ func (s *movieRecord) convertLineParts(line []string) {
 	}
 
 	// This field is actually json in the data set:
-	//  [{'iso_639_1': 'en', 'name': 'English'}]
-	s.spokenLanguages = line[17]
+	//  [{'iso_639_1': 'en',
+	//    'name': 'English'}]
+	s.spokenLanguages = minifyNameJson(line[17])
+
 	s.status = line[18]
 	s.tagline = line[19]
 	s.title = line[20]
@@ -190,6 +199,7 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 	var movieRec movieRecord
 
 	for {
+		// TODO: skip first line, those are the headers
 		fmt.Print(".")
 		line, err := reader.Read()
 
@@ -239,19 +249,26 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 	return nil
 }
 
-func minifyGenreJson(line string) string {
-	type genre struct {
-		Id   uint64 `json:"id"`
-		Name string `json:"name"`
-	}
+type justName struct {
+	Name string `json:"name"`
+}
 
-	var genres []genre
-	err := json.Unmarshall([]byte(line), &genres)
+// badline because the json is using ' instead of " for keys...
+func minifyNameJson(badline string) string {
+	line := strings.Replace(badline, `'`, `"`, -1)
+
+	var objects []justName
+	err := json.Unmarshal([]byte(line), &objects)
+	if err != nil {
+		// TODO: revise this
+		log.Println("error:", err, "line: ", line)
+		return ""
+	}
 
 	var names []string
 
-	for _, el := range genres {
-		names = append(names, el)
+	for _, el := range objects {
+		names = append(names, el.Name)
 	}
 
 	return strings.Join(names, ",")
