@@ -12,8 +12,11 @@ import (
 )
 
 const (
-	AppName = "mvpic"
-	advice  = "https://www.kaggle.com/rounakbanik/the-movies-dataset"
+	// AppName is the application name under ecophagy
+	AppName = `mvpic`
+
+	// advice is where the data set was originally taken from
+	advice = `https://www.kaggle.com/rounakbanik/the-movies-dataset`
 )
 
 func dataPath() string {
@@ -22,13 +25,13 @@ func dataPath() string {
 
 func expectedFiles() map[string]string {
 	return map[string]string{
-		"credits.csv":         "d62a1d7d652d324bebee68782f664fc9",
-		"keywords.csv":        "7d0f5123e11917fa1bea011448e5f73d",
-		"links.csv":           "b9b8fe775557e10e35418410499775cf",
-		"links_small.csv":     "917eddf52079d6ce5c6cfd63b17515f7",
-		"movies_metadata.csv": "42bf3ef8c208a01a4776955875978b1e",
-		"ratings.csv":         "f640a181f6fa0b2e3294f786fa350ccc",
-		"ratings_small.csv":   "8864480f98416ccecaf17aa5263bbea1",
+		`credits.csv`:         `d62a1d7d652d324bebee68782f664fc9`,
+		`keywords.csv`:        `7d0f5123e11917fa1bea011448e5f73d`,
+		`links.csv`:           `b9b8fe775557e10e35418410499775cf`,
+		`links_small.csv`:     `917eddf52079d6ce5c6cfd63b17515f7`,
+		`movies_metadata.csv`: `42bf3ef8c208a01a4776955875978b1e`,
+		`ratings.csv`:         `f640a181f6fa0b2e3294f786fa350ccc`,
+		`ratings_small.csv`:   `8864480f98416ccecaf17aa5263bbea1`,
 	}
 }
 

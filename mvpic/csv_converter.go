@@ -4,10 +4,8 @@ import (
 	"bufio"
 	"database/sql"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"strconv"
@@ -92,7 +90,7 @@ func (s *movieRecord) convertLineParts(line []string) {
 	//   [{'id': 28, 'name': 'Action'},
 	//    {'id': 18, 'name': 'Drama'},
 	//    {'id': 53, 'name': 'Thriller'}]
-	s.genres = minifyNameJson(line[3])
+	s.genres = minifyNameJSON(line[3])
 	s.homepage = line[4]
 	{
 		id, err := strconv.ParseUint(line[5], 10, 64)
@@ -118,12 +116,12 @@ func (s *movieRecord) convertLineParts(line []string) {
 	// Production companies:
 	//   [{'name': 'Miramax Films', 'id': 14},
 	//    {'name': 'A Band Apart', 'id': 59}]
-	s.productionCompanies = minifyNameJson(line[12])
+	s.productionCompanies = minifyNameJSON(line[12])
 
 	// This field is json in the data set:
 	//   [{'iso_3166_1': 'GB',
 	//     'name': 'United Kingdom'}]
-	s.productionCountries = minifyNameJson(line[13])
+	s.productionCountries = minifyNameJSON(line[13])
 	s.releaseDate = line[14] // TODO: unix timestamps?
 
 	{
@@ -143,7 +141,7 @@ func (s *movieRecord) convertLineParts(line []string) {
 	// This field is actually json in the data set:
 	//  [{'iso_639_1': 'en',
 	//    'name': 'English'}]
-	s.spokenLanguages = minifyNameJson(line[17])
+	s.spokenLanguages = minifyNameJSON(line[17])
 
 	s.status = line[18]
 	s.tagline = line[19]
@@ -198,6 +196,7 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 
 	var movieRec movieRecord
 
+	db.Exec("BEGIN TRANSACTION;")
 	for {
 		// TODO: skip first line, those are the headers
 		fmt.Print(".")
@@ -245,31 +244,73 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 		stmt.Close()
 
 	}
+	db.Exec("COMMIT TRANSACTION;")
 
 	return nil
 }
 
-type justName struct {
-	Name string `json:"name"`
-}
-
 // badline because the json is using ' instead of " for keys...
-func minifyNameJson(badline string) string {
-	line := strings.Replace(badline, `'`, `"`, -1)
-
-	var objects []justName
-	err := json.Unmarshal([]byte(line), &objects)
-	if err != nil {
-		// TODO: revise this
-		log.Println("error:", err, "line: ", line)
-		return ""
-	}
-
+func minifyNameJSON(line string) string {
+	var cursor int
 	var names []string
+	for {
+		name, next := parseEntry(line[cursor:])
+		cursor += next
 
-	for _, el := range objects {
-		names = append(names, el.Name)
+		if name == "" {
+			break
+		}
+
+		names = append(names, name)
 	}
 
 	return strings.Join(names, ",")
+}
+
+// this is necessary because the data has troublesome, incorrect JSON
+// entries. Take a look at the test cases for further elaboration
+func parseEntry(line string) (string, int) {
+	lookup := `'name': `
+	startIndex := strings.Index(line, lookup)
+
+	if startIndex < 0 {
+		// not found, error
+		return "", startIndex
+	}
+
+	offset := startIndex + len(lookup)
+
+	cursor := offset
+	terminator := line[cursor]
+
+	cursor++ // move to start of input
+
+	var retName string
+
+	for {
+		terminated := line[cursor] == terminator
+		isWithinBounds := cursor+1 < len(line)-1
+		shouldStop := terminated && isWithinBounds &&
+			(line[cursor+1] == ',' || line[cursor+1] == '}')
+
+		if shouldStop {
+			break
+		}
+
+		retName += string(line[cursor])
+		cursor++
+	}
+
+	if len(retName) >= 2 &&
+		retName[0] == terminator &&
+		retName[len(retName)-1] == terminator {
+		// Some python dictionary entries can have docsrings instead
+		// so we can do this rather dodgy check, and get rid of the
+		// surplus terminators, without making the parser more
+		// complicated...
+		retName = retName[1 : len(retName)-1]
+	}
+
+	return retName, cursor
+
 }

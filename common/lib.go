@@ -11,14 +11,17 @@ import (
 	"path/filepath"
 )
 
-const OrgName = "ecophagy"
+const orgName = "ecophagy"
 
+// FileExists checks if a file exists
 func FileExists(filename string) bool {
 	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	defer fd.Close()
 	return err != nil
 }
 
+// DownloadIfNotExist will check for a filename, and if it doesn't
+// exist, will attempt to download it by a provided url.
 func DownloadIfNotExist(filename, url string) error {
 	if FileExists(filename) {
 		return nil
@@ -27,6 +30,7 @@ func DownloadIfNotExist(filename, url string) error {
 	return DownloadFile(filename, url)
 }
 
+// DownloadFile will download a file from a url
 func DownloadFile(filename, url string) error {
 	out, err := os.Create(filename)
 	if err != nil {
@@ -44,6 +48,8 @@ func DownloadFile(filename, url string) error {
 	return err
 }
 
+// FileToLines will fully read a file, and return it as individual
+// lines.
 func FileToLines(filename string) ([]string, error) {
 	fd, err := os.Open(filename)
 	if err != nil {
@@ -67,12 +73,18 @@ func FileToLines(filename string) ([]string, error) {
 	return ret, nil
 }
 
+// HasHome will check if the HOME environment variable is set
 func HasHome() bool { return os.Getenv("HOME") != "" }
 
+// DataPath will return the path of the ecophagy project config
+// folder. Subprojects may be stored in the form of:
+// - $HOME/.config/ecophagy/mvpic
+// - $HOME/.config/ecophay/randparty
 func DataPath() string {
-	return path.Join(os.Getenv("HOME"), ".config", OrgName)
+	return path.Join(os.Getenv("HOME"), ".config", orgName)
 }
 
+// PathExists will check if a path exists
 func PathExists(path string) bool {
 	_, err := os.Stat(path)
 
@@ -101,6 +113,8 @@ func FileToMd5Sum(path string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
+// FileList will return a list of files, by walking through a
+// directory tree.
 func FileList(dirpath string) ([]string, error) {
 	var ret []string
 
