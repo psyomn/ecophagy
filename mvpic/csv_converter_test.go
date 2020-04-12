@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func TestMinifyGenreJSON(t *testing.T) {
+func TestMinifyGenrePyDict(t *testing.T) {
 	line := `[{'id': 123, 'name': 'potato'}, {'id': 321, 'name': 'patata'}]`
-	actual := minifyNameJSON(line)
+	actual := minifyNamePyDict(line)
 	expected := `potato,patata`
 
 	if actual != expected {
@@ -17,7 +17,7 @@ func TestMinifyGenreJSON(t *testing.T) {
 	}
 }
 
-func TestManyNamesJson(t *testing.T) {
+func TestManyNamesPyDict(t *testing.T) {
 	data := `[{'name': 'Procirep', 'id': 311},
                   {'name': 'Constellation Productions', 'id': 590},
                   {'name': 'France 3 Cinéma', 'id': 591},
@@ -40,7 +40,7 @@ func TestManyNamesJson(t *testing.T) {
                   {'name': 'Ossane', 'id': 79438},
                   {'name': 'Phoenix Images', 'id': 79439}]`
 
-	names := minifyNameJSON(data)
+	names := minifyNamePyDict(data)
 
 	if len(strings.Split(names, ",")) != 21 {
 		t.Fatal("wrong number of entries")

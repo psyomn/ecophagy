@@ -18,7 +18,7 @@ const (
 	createMovieMetadataTable = `
 CREATE TABLE IF NOT EXISTS movies (
   adult                   BOOLEAN,
-  belongs_to_collection   STRING, -- json obj
+  belongs_to_collection   STRING, -- python obj
   budget                  BIGINT,
   genres                  TEXT,
   homepage                TEXT,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS movies (
 );`
 	insertMovie = `INSERT INTO movies values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
 
-	createMovieIdIndex   = `CREATE INDEX IF NOT EXISTS movie_id_index ON movies(id);`
+	createMovieIDIndex   = `CREATE INDEX IF NOT EXISTS movie_id_index ON movies(id);`
 	createMovieNameIndex = `CREATE INDEX IF NOT EXISTS movie_original_title_index ON movies(original_title)`
 )
 
@@ -86,11 +86,11 @@ func (s *movieRecord) convertLineParts(line []string) {
 		}
 	}
 
-	// This is json in the data set:
+	// This is python dict in the data set:
 	//   [{'id': 28, 'name': 'Action'},
 	//    {'id': 18, 'name': 'Drama'},
 	//    {'id': 53, 'name': 'Thriller'}]
-	s.genres = minifyNameJSON(line[3])
+	s.genres = minifyNamePyDict(line[3])
 	s.homepage = line[4]
 	{
 		id, err := strconv.ParseUint(line[5], 10, 64)
@@ -113,15 +113,13 @@ func (s *movieRecord) convertLineParts(line []string) {
 
 	s.posterPath = line[11]
 
-	// Production companies:
 	//   [{'name': 'Miramax Films', 'id': 14},
 	//    {'name': 'A Band Apart', 'id': 59}]
-	s.productionCompanies = minifyNameJSON(line[12])
+	s.productionCompanies = minifyNamePyDict(line[12])
 
-	// This field is json in the data set:
 	//   [{'iso_3166_1': 'GB',
 	//     'name': 'United Kingdom'}]
-	s.productionCountries = minifyNameJSON(line[13])
+	s.productionCountries = minifyNamePyDict(line[13])
 	s.releaseDate = line[14] // TODO: unix timestamps?
 
 	{
@@ -138,10 +136,9 @@ func (s *movieRecord) convertLineParts(line []string) {
 		}
 	}
 
-	// This field is actually json in the data set:
 	//  [{'iso_639_1': 'en',
 	//    'name': 'English'}]
-	s.spokenLanguages = minifyNameJSON(line[17])
+	s.spokenLanguages = minifyNamePyDict(line[17])
 
 	s.status = line[18]
 	s.tagline = line[19]
@@ -174,7 +171,7 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 	// create tables if not exist
 	setupQueries := [...]string{
 		createMovieMetadataTable,
-		createMovieIdIndex,
+		createMovieIDIndex,
 		createMovieNameIndex,
 	}
 
@@ -249,8 +246,8 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 	return nil
 }
 
-// badline because the json is using ' instead of " for keys...
-func minifyNameJSON(line string) string {
+// TODO: handle utf8 stuff properly. See output in tests for examples.
+func minifyNamePyDict(line string) string {
 	var cursor int
 	var names []string
 	for {
@@ -267,7 +264,7 @@ func minifyNameJSON(line string) string {
 	return strings.Join(names, ",")
 }
 
-// this is necessary because the data has troublesome, incorrect JSON
+// this is necessary because the data has troublesome, python dictionary
 // entries. Take a look at the test cases for further elaboration
 func parseEntry(line string) (string, int) {
 	lookup := `'name': `
