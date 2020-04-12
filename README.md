@@ -1,6 +1,7 @@
 # Ecophagy
 
-![Ecophagy](./ecophagy.png)
+![Ecophagy](ecophagy.png)
+
 Logo designed by [SunnySummerSkye](https://www.instagram.com/sunnysummerskye/).
 
 OWN YOUR DATA.
