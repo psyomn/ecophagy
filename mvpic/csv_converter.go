@@ -6,10 +6,12 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -23,7 +25,7 @@ CREATE TABLE IF NOT EXISTS movies (
   genres                  TEXT,
   homepage                TEXT,
   id                      INTEGER PRIMARY KEY,
-  imdb_id                 TEXT,
+  imdb_id                 BIGINT,
   original_language       TEXT,
   original_title          TEXT,
   overview                TEXT,
@@ -55,7 +57,7 @@ type movieRecord struct {
 	genres              string
 	homepage            string
 	id                  uint64
-	imdbID              string
+	imdbID              uint64
 	originalLanguage    string
 	originalTitle       string
 	overview            string
@@ -63,7 +65,7 @@ type movieRecord struct {
 	posterPath          string
 	productionCompanies string
 	productionCountries string
-	releaseDate         string
+	releaseDate         int64
 	revenue             uint64
 	runtime             float64
 	spokenLanguages     string
@@ -99,7 +101,7 @@ func (s *movieRecord) convertLineParts(line []string) {
 		}
 	}
 
-	s.imdbID = line[6]
+	s.imdbID = parseImdbID(line[6])
 	s.originalLanguage = line[7]
 	s.originalTitle = line[8]
 	s.overview = line[9]
@@ -120,7 +122,7 @@ func (s *movieRecord) convertLineParts(line []string) {
 	//   [{'iso_3166_1': 'GB',
 	//     'name': 'United Kingdom'}]
 	s.productionCountries = minifyNamePyDict(line[13])
-	s.releaseDate = line[14] // TODO: unix timestamps?
+	s.releaseDate = parseMovieDate(line[14])
 
 	{
 		u, err := strconv.ParseUint(line[15], 10, 64)
@@ -244,6 +246,38 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 	db.Exec("COMMIT TRANSACTION;")
 
 	return nil
+}
+
+func parseMovieDate(date string) int64 {
+	const layout = "2006-01-02"
+
+	if len(date) < len(layout) {
+		return 0
+	}
+
+	t, err := time.Parse(layout, date)
+	if err != nil {
+		log.Println(err, "date:", date)
+		return 0
+	}
+	return t.Unix()
+}
+
+func parseImdbID(id string) uint64 {
+	// ids are of the form tt123123, so we just get rid of the t's
+	// and store ints for more compact space...
+
+	if len(id) < 2 {
+		log.Println("movie has no imdb id")
+		return 0
+	}
+
+	convID, err := strconv.ParseUint(id[2:], 10, 64)
+	if err != nil {
+		log.Println(err, "id:", id)
+		return 0
+	}
+	return convID
 }
 
 // TODO: handle utf8 stuff properly. See output in tests for examples.
