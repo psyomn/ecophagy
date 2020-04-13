@@ -86,16 +86,14 @@ func setup() {
 		panic(err)
 	}
 
-	{
-		var files []string
-		for _, el := range expectedFiles() {
-			files = append(files, el)
-		}
+	var files []string
+	for _, el := range expectedFiles() {
+		files = append(files, el)
+	}
 
-		movieDbPath := path.Join(moviePath, "movies.sqlite3")
-		if err := MakeDbFromCSV(movieDbPath, dataPath(), "movies_metadata.csv"); err != nil {
-			panic(err)
-		}
+	movieDbPath := path.Join(moviePath, "movies.sqlite3")
+	if err := MakeDbFromCSV(movieDbPath, dataPath(), "movies_metadata.csv"); err != nil {
+		panic(err)
 	}
 }
 
