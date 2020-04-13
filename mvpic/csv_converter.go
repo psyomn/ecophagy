@@ -16,40 +16,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const (
-	createMovieMetadataTable = `
-CREATE TABLE IF NOT EXISTS movies (
-  adult                   BOOLEAN,
-  belongs_to_collection   STRING, -- python obj
-  budget                  BIGINT,
-  genres                  TEXT,
-  homepage                TEXT,
-  id                      INTEGER PRIMARY KEY,
-  imdb_id                 BIGINT,
-  original_language       TEXT,
-  original_title          TEXT,
-  overview                TEXT,
-  popularity              DOUBLE,
-  poster_path             TEXT,
-  production_companies    TEXT,
-  production_countries    TEXT,
-  release_date            DATETIME,
-  revenue                 BIGINT,
-  runtime                 DOUBLE,
-  spoken_languages        TEXT,
-  status                  TEXT,
-  tagline                 TEXT,
-  title                   TEXT,
-  video                   BOOLEAN,
-  vote_average            DOUBLE,
-  vote_count              INT
-);`
-	insertMovie = `INSERT INTO movies values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-
-	createMovieIDIndex   = `CREATE INDEX IF NOT EXISTS movie_id_index ON movies(id);`
-	createMovieNameIndex = `CREATE INDEX IF NOT EXISTS movie_original_title_index ON movies(original_title)`
-)
-
 type movieRecord struct {
 	adult               bool
 	belongsToCollection string
@@ -175,6 +141,7 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 		createMovieMetadataTable,
 		createMovieIDIndex,
 		createMovieNameIndex,
+		createUserRatingsTable,
 	}
 
 	for _, query := range setupQueries {
