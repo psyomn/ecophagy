@@ -23,6 +23,7 @@ type movieRecord struct {
 	productionCompanies string
 	productionCountries string
 	releaseDate         int64
+	releaseDateTime     time.Time // for db driver
 	revenue             uint64
 	runtime             float64
 	spokenLanguages     string

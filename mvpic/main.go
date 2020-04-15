@@ -19,8 +19,19 @@ const (
 	advice = `https://www.kaggle.com/rounakbanik/the-movies-dataset`
 )
 
+var (
+	cmdUpdateDatabase = false
+	cmdShowConfigPath = false
+	cmdSearch         = ""
+	cmdDesc           = ""
+)
+
 func dataPath() string {
 	return path.Join(common.DataPath(), AppName)
+}
+
+func dbPath() string {
+	return path.Join(dataPath(), "movies.sqlite3")
 }
 
 func expectedFiles() map[string]string {
@@ -68,7 +79,7 @@ func checkFiles() error {
 	return nil
 }
 
-func setup() {
+func setupFiles() {
 	moviePath := dataPath()
 
 	if !common.PathExists(moviePath) {
@@ -86,15 +97,20 @@ func setup() {
 		panic(err)
 	}
 
-	var files []string
-	for _, el := range expectedFiles() {
-		files = append(files, el)
-	}
+}
 
-	movieDbPath := path.Join(moviePath, "movies.sqlite3")
-	if err := MakeDbFromCSV(movieDbPath, dataPath(), "movies_metadata.csv"); err != nil {
+func setupDB() {
+	if err := MakeDbFromCSV(dbPath(), dataPath(), "movies_metadata.csv"); err != nil {
 		panic(err)
 	}
+}
+
+func setupFlags() {
+	flag.BoolVar(&cmdUpdateDatabase, "update", cmdUpdateDatabase, "update database with CSV")
+	flag.BoolVar(&cmdShowConfigPath, "show-config-path", cmdShowConfigPath, "print the path to your app data")
+	flag.StringVar(&cmdSearch, "search", cmdSearch, "search movie by title")
+	flag.StringVar(&cmdDesc, "desc", cmdDesc, "describe movie given id")
+	flag.Parse()
 }
 
 func main() {
@@ -102,9 +118,31 @@ func main() {
 		panic("you need to have a home in order to run this")
 	}
 
-	setup()
+	setupFlags()
 
-	flag.Parse()
+	if len(os.Args) <= 1 {
+		flag.Usage()
+		os.Exit(1)
+	}
 
-	fmt.Println("do stuff")
+	if cmdUpdateDatabase {
+		setupFiles()
+		setupDB()
+		return
+	}
+
+	if cmdShowConfigPath {
+		fmt.Println(dataPath())
+		return
+	}
+
+	if cmdSearch != "" {
+		cliSearch(cmdSearch)
+		return
+	}
+
+	if cmdDesc != "" {
+		cliDesc(cmdDesc)
+		return
+	}
 }

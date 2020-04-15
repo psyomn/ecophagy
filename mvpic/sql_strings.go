@@ -40,8 +40,9 @@ CREATE TABLE IF NOT EXISTS ratings (
 
 	createMovieIDIndex = `CREATE INDEX IF NOT EXISTS movie_id_index ON movies(id);`
 
-	createMovieNameIndex = `CREATE INDEX IF NOT EXISTS movie_original_title_index ON movies(original_title)`
+	createMovieNameIndex = `CREATE INDEX IF NOT EXISTS movie_original_title_index ON movies(original_title);`
 
-	// NB: prepared statement must also lowercase the input
-	searchMovieIlike = `SELECT * FROM movies WHERE LOWER(title) like '%?%'`
+	searchMovieLike = `SELECT * FROM movies WHERE title like ?;`
+
+	descMovie = `SELECT * FROM movies WHERE id = ?`
 )
