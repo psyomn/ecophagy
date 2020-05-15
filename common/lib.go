@@ -76,6 +76,9 @@ func FileToLines(filename string) ([]string, error) {
 // HasHome will check if the HOME environment variable is set
 func HasHome() bool { return os.Getenv("HOME") != "" }
 
+// HasEditor will check if there is an editor set
+func HasEditor() bool { return os.Getenv("EDITOR") != "" }
+
 // DataPath will return the path of the ecophagy project config
 // folder. Subprojects may be stored in the form of:
 // - $HOME/.config/ecophagy/mvpic

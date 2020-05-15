@@ -31,10 +31,22 @@ CREATE TABLE IF NOT EXISTS movies (
 
 	createUserRatingsTable = `
 CREATE TABLE IF NOT EXISTS ratings (
-  id      INTEGER PRIMARY KEY AUTOINCREMENT,
-  comment TEXT,
-  score   INTEGER CHECK(score >= 0 and score <= 10)
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  movie_id INTEGER,
+  comment  TEXT,
+  score    INTEGER CHECK(score >= 0 and score <= 10),
+
+  UNIQUE(movie_id),
+  FOREIGN KEY(movie_id) REFERENCES movies(id)
 );
+`
+
+	insertUserRating = `
+INSERT INTO ratings(movie_id, comment, score) VALUES (?, ?, ?)
+  ON CONFLICT(movie_id) DO
+  UPDATE SET
+    comment = excluded.comment,
+    score = excluded.score;
 `
 
 	createWatchList = `

@@ -24,6 +24,7 @@ var (
 	cmdShowConfigPath = false
 	cmdSearch         = ""
 	cmdDesc           = ""
+	cmdRate           = ""
 )
 
 func dataPath() string {
@@ -110,6 +111,7 @@ func setupFlags() {
 	flag.BoolVar(&cmdShowConfigPath, "show-config-path", cmdShowConfigPath, "print the path to your app data")
 	flag.StringVar(&cmdSearch, "search", cmdSearch, "search movie by title")
 	flag.StringVar(&cmdDesc, "desc", cmdDesc, "describe movie given id")
+	flag.StringVar(&cmdRate, "rate", cmdRate, "rate a movie by id")
 	flag.Parse()
 }
 
@@ -143,6 +145,11 @@ func main() {
 
 	if cmdDesc != "" {
 		cliDesc(cmdDesc)
+		return
+	}
+
+	if cmdRate != "" {
+		cliRate(cmdRate)
 		return
 	}
 }
