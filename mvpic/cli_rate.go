@@ -5,8 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/psyomn/ecophagy/common"
 
@@ -57,7 +60,54 @@ func cliRate(id string) {
 // this was a very interesting movie wow
 //
 func rateThroughEditor(ri *ratingInfo) {
-	panic("unimplemented")
+	const (
+		sample = `10
+first line is your rating. you can leave any comments below.
+`
+		pattern = AppName
+	)
+
+	f, err := ioutil.TempFile(dataPath(), AppName)
+	if err != nil {
+		panic(err)
+	}
+	// defer os.Remove(f.Name())
+
+	err = ioutil.WriteFile(f.Name(), []byte(sample), 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	cmd := exec.Command(common.Editor(), f.Name())
+	fmt.Println(cmd)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	maybeContents, err := ioutil.ReadFile(f.Name())
+	if err != nil {
+		panic(err)
+	}
+
+	lines := strings.Split(string(maybeContents), common.Newline())
+
+	if len(lines) < 2 {
+		panic("movie review not in proper format")
+	}
+
+	score, err := strconv.Atoi(lines[0])
+	if err != nil {
+		panic(err)
+	}
+
+	ri.score = score
+	ri.comment = strings.Join(lines[1:len(lines)-1], common.Newline())
+
+	rate(ri)
 }
 
 // stdin input mode
@@ -88,7 +138,6 @@ func rateThroughStdin(ri *ratingInfo) {
 }
 
 func rate(ri *ratingInfo) {
-	fmt.Println("should execute sql thing here")
 	db, err := sql.Open("sqlite3", dbPath())
 
 	if err != nil {
@@ -103,4 +152,6 @@ func rate(ri *ratingInfo) {
 
 	stmt.Exec(ri.movieID, ri.comment, ri.score)
 	stmt.Close()
+
+	fmt.Println("rated movie with id:", ri.movieID)
 }
