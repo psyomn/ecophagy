@@ -31,9 +31,35 @@ CREATE TABLE IF NOT EXISTS movies (
 
 	createUserRatingsTable = `
 CREATE TABLE IF NOT EXISTS ratings (
-  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  movie_id INTEGER,
+  comment  TEXT,
+  score    INTEGER CHECK(score >= 0 and score <= 10),
+
+  UNIQUE(movie_id),
+  FOREIGN KEY(movie_id) REFERENCES movies(id)
+);
+`
+
+	insertUserRating = `
+INSERT INTO ratings(movie_id, comment, score) VALUES (?, ?, ?)
+  ON CONFLICT(movie_id) DO
+  UPDATE SET
+    comment = excluded.comment,
+    score = excluded.score;
+`
+
+	createWatchList = `
+-- table to store movies that one wants to see in the future
+CREATE TABLE IF NOT EXISTS watchlist (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  movie_id INTEGER,
+
+  -- I sometimes forget why I wanted to watch something, and always
+  -- wanted the ability to add a note.
   comment TEXT,
-  score   INTEGER -- should be within range of [1, 10]
+
+  FOREIGN KEY movie_id REFERENCES movies(id)
 );
 `
 	insertMovie = `INSERT INTO movies values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
