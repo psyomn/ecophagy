@@ -1,3 +1,4 @@
+// TODO: must support windows APPDATA path
 package main
 
 import (
@@ -27,6 +28,8 @@ adjct.txt https://raw.githubusercontent.com/taikuukaits/SimpleWordlists/master/W
 func initialize() { rand.Seed(time.Now().Unix()) }
 
 func dataPath() string { return path.Join(common.DataPath(), AppName) }
+
+func appFilePath(filename string) string { return path.Join(dataPath(), filename) }
 
 func configFile() string { return path.Join(dataPath(), configFileName) }
 
@@ -76,28 +79,27 @@ func main() {
 		return
 	}
 
-	wantedFiles := config
+	for filename, url := range config {
+		a := appFilePath(filename)
+		fmt.Println("Checking/Downloading:", a, "...")
 
-	for k, v := range wantedFiles {
-		fmt.Println("Checking/Downloading:", v, "...")
-		err := common.DownloadIfNotExist(k, v)
-
+		err := common.DownloadIfNotExist(a, url)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
-	nouns, err := common.FileToLines("nouns.txt")
+	nouns, err := common.FileToLines(appFilePath("nouns.txt"))
 	if err != nil {
 		panic(err)
 	}
 
-	verbs, err := common.FileToLines("verbs.txt")
+	verbs, err := common.FileToLines(appFilePath("verbs.txt"))
 	if err != nil {
 		panic(err)
 	}
 
-	adjct, err := common.FileToLines("adjct.txt")
+	adjct, err := common.FileToLines(appFilePath("adjct.txt"))
 	if err != nil {
 		panic(err)
 	}
