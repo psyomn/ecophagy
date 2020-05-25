@@ -1,8 +1,6 @@
 package main
 
-import (
-	"math/rand"
-)
+import "math/rand"
 
 func sampleArray(arr []string) string {
 	// tempting to use unsafe here, but I know that this will be
