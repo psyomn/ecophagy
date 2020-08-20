@@ -1,3 +1,10 @@
 #!/usr/bin/env bash
 source "credentials.sh"
-curl -s -i -X POST "localhost:9876/login" -d "{\"username\":\"$PHIUSER\",\"password\":\"$PHIPASS\"}"
+
+LOGIN_OUTPUT=$(curl -s -i \
+                    -X POST \
+                    -d "{\"username\":\"$PHIUSER\",\"password\":\"$PHIPASS\"}" \
+                    "http://127.0.0.1:9876/login")
+
+echo "$LOGIN_OUTPUT"
+echo "$LOGIN_OUTPUT" | jq -j -r -R 'fromjson? | .token' > current-token
