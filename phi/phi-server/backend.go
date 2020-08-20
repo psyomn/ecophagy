@@ -212,9 +212,9 @@ func upload(filename, username, timestamp string, data []byte) error {
 	fmt.Println("timestamp:", timestamp)
 	fmt.Println("data size:", len(data))
 
-	fh, err := os.Open("test-temp.jpg")
+	fh, err := os.Create("test-temp.jpg")
 	if err != nil {
-		log.Println("could not write the file")
+		log.Println("could not open file" + err.Error())
 		return err
 	}
 	defer fh.Close()
@@ -224,6 +224,7 @@ func upload(filename, username, timestamp string, data []byte) error {
 		log.Println("could not write file: " + err.Error())
 		return err
 	}
+	fh.Sync()
 
 	return errors.New("not implemented")
 }

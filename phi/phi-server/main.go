@@ -195,16 +195,13 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 func handleUpload(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*150)
+
 	if r.Method != "POST" {
 		err := errors.New("only post supported.")
 		respondWithError(w, err)
 		return
 	}
-
-	// TODO: must have Content-Type: image/jpeg or the likes
-	// header checking here. Won't hurt at least.
-
-	// token should be served through the headers
 
 	filename := "filename"
 	timestamp := "unix-timestamp"
@@ -226,8 +223,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(srvState.session)
 	srvState.mutex.Unlock()
 
-	if username, ok := srvState.session[token]; !ok {
-		upload(filename, username, timestamp, body)
+	if username, ok := srvState.session[token]; ok {
+		upload(filename, username, timestamp, body[:])
 		return
 	} else {
 		fmt.Println(username)
@@ -246,6 +243,6 @@ func main() {
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/upload", handleUpload)
 
-	port := fmt.Sprintf(":%s", fls.cmdPort)
+	port := fmt.Sprintf("127.0.0.1:%s", fls.cmdPort)
 	log.Fatal(http.ListenAndServe(port, nil))
 }
