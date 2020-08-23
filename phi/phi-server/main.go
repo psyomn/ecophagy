@@ -203,8 +203,16 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filename := "filename"
-	timestamp := "unix-timestamp"
+	uriParts := strings.Split(r.RequestURI, "/")
+	filename := ""
+	timestamp := ""
+	if len(uriParts) == 4 {
+		filename = uriParts[2]
+		timestamp = uriParts[3]
+	} else {
+		respondWithError(w, errors.New("url: urls is malformed: "+r.RequestURI))
+		return
+	}
 
 	parts := strings.Split(r.Header["Authorization"][0], " ")
 	if len(parts) != 2 {
@@ -238,11 +246,16 @@ func main() {
 	flag.StringVar(&fls.cmdPort, "port", fls.cmdPort, "port to listen at")
 	flag.Parse()
 
-	http.HandleFunc("/status", handleStatus)
-	http.HandleFunc("/register", handleRegister)
-	http.HandleFunc("/login", handleLogin)
-	http.HandleFunc("/upload", handleUpload)
+	server := http.NewServeMux()
+
+	server.HandleFunc("/status", handleStatus)
+	server.HandleFunc("/register", handleRegister)
+	server.HandleFunc("/login", handleLogin)
+	server.HandleFunc("/upload/", handleUpload)
 
 	port := fmt.Sprintf("127.0.0.1:%s", fls.cmdPort)
-	log.Fatal(http.ListenAndServe(port, nil))
+	err := http.ListenAndServe(port, server)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

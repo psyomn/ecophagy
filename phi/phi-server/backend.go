@@ -206,13 +206,10 @@ func login(username, password string) (string, error) {
 }
 
 func upload(filename, username, timestamp string, data []byte) error {
-	fmt.Println("upload")
-	fmt.Println("filename :", filename)
-	fmt.Println("username :", username)
-	fmt.Println("timestamp:", timestamp)
-	fmt.Println("data size:", len(data))
-
-	fh, err := os.Create("test-temp.jpg")
+	// TODO: need to embed usercomment metadata in jpeg here
+	// TODO: I wonder if instead of data []byte we should have stream
+	//       access instead (io.Reader)
+	fh, err := os.Create(filename)
 	if err != nil {
 		log.Println("could not open file" + err.Error())
 		return err
