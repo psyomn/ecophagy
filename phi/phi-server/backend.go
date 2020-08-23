@@ -34,19 +34,6 @@ type serverState struct {
 	mutex   sync.Mutex
 }
 
-const (
-	dbName = "phidb.sqlite3"
-
-	phiSchema = `CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username STRING UNIQUE,
-  password STRING,
-  salt STRING
-)`
-	insertUserSQL = `INSERT INTO users (username, password, salt) VALUES (?,?,?)`
-	loginUserSQL  = `SELECT username, password, salt FROM users WHERE username = ?`
-)
-
 var (
 	dbHandle *sql.DB
 	dbMutex  sync.Mutex
