@@ -27,7 +27,8 @@ Login user to service.
 
 POST /upload/<filename>/<timestamp>
     Header/Authorization: token <token>
-    BODY: IMAGE DATA
+    Header/Content-Type: application/octet-stream
+    BODY: <IMAGE-BINARY-DATA>
     RETURN 400, on bad credentials
     RETURN 200, on success
     RETURN 500, on server go boom
