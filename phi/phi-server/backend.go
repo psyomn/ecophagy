@@ -193,7 +193,6 @@ func login(username, password string) (string, error) {
 }
 
 func upload(filename, username, timestamp string, data []byte) error {
-	// TODO: need to embed usercomment metadata in jpeg here
 	// TODO: I wonder if instead of data []byte we should have stream
 	//       access instead (io.Reader)
 	fh, err := os.Create(filename)
@@ -203,7 +202,9 @@ func upload(filename, username, timestamp string, data []byte) error {
 	}
 	defer fh.Close()
 
-	_, err = fh.Write(data)
+	dataToWrite := data
+
+	_, err = fh.Write(dataToWrite)
 	if err != nil {
 		log.Println("could not write file: " + err.Error())
 		return err

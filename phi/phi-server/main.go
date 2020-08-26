@@ -57,20 +57,6 @@ func respondWithError(w http.ResponseWriter, err error) {
 	w.Write(errRespJSON)
 }
 
-func validatePassword(pass string) error {
-	if len(pass) < minPasswordLength {
-		return errors.New("problem registering user with small password")
-	}
-	return nil
-}
-
-func validateUsername(user string) error {
-	if len(user) < minUsernameLength {
-		return errors.New("problem registering user with small username")
-	}
-	return nil
-}
-
 func handleStatus(w http.ResponseWriter, r *http.Request) {
 	type status struct {
 		Status  string `json:"status"`
@@ -204,8 +190,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uriParts := strings.Split(r.RequestURI, "/")
-	filename := ""
-	timestamp := ""
+	filename := "default-filename"
+	timestamp := "default-timestamp"
 	if len(uriParts) == 4 {
 		filename = uriParts[2]
 		timestamp = uriParts[3]
