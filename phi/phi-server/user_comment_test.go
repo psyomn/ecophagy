@@ -16,6 +16,6 @@ func TestUserCommentHasCorrectFormat(t *testing.T) {
 	bytes := phi.toJSON()
 
 	if len(bytes) == 0 {
-		log.Fail("should generate some json")
+		t.Fatalf("%s", "should generate some json")
 	}
 }
