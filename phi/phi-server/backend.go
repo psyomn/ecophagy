@@ -22,11 +22,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/psyomn/ecophagy/img"
 )
 
 type serverState struct {
@@ -200,16 +203,33 @@ func upload(filename, username, timestamp string, data []byte) error {
 		log.Println("could not open file" + err.Error())
 		return err
 	}
-	defer fh.Close()
 
-	dataToWrite := data
-
-	_, err = fh.Write(dataToWrite)
+	_, err = fh.Write(data)
 	if err != nil {
 		log.Println("could not write file: " + err.Error())
 		return err
 	}
-	fh.Sync()
+	err = fh.Sync()
+	if err != nil {
+		return err
+	}
 
-	return errors.New("not implemented")
+	err = fh.Close()
+	if err != nil {
+		return err
+	}
+
+	if img.HasExifTool() {
+		var cmt userComment
+		cmt.Phi.Username = username
+		tm, err := strconv.Atoi(timestamp)
+		if err == nil {
+			cmt.Phi.Timestamp = int64(tm)
+		}
+		// default tags
+		cmt.Phi.Tags = []string{"phi", username}
+		return img.SetExifComment(filename, string(cmt.toJSON()))
+	}
+
+	return nil
 }

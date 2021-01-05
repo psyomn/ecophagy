@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/psyomn/ecophagy/img"
 )
 
 const (
@@ -227,6 +229,10 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	if !img.HasExifTool() {
+		log.Println("warning: no exif tool found; no support for comment tagging photos")
+	}
+
 	fls := &cmdFlags{cmdPort: defaultPort}
 
 	flag.StringVar(&fls.cmdPort, "port", fls.cmdPort, "port to listen at")
