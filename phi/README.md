@@ -14,3 +14,8 @@ Use cases:
 - support multiple users (no sharing with each other though)
 - not supposed to be for more than 10 users
 - very little concurrency concerns
+
+Soft Dependencies:
+- exiftool: will add metadata through embedding json inside the
+  comment exif field. If you don't have exiftool, then images will
+  simply not be tagged.
