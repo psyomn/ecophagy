@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"github.com/psyomn/ecophagy/img"
+	"github.com/psyomn/ecophagy/phi/phi-server/static"
 )
 
 const (
@@ -228,6 +229,10 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleBrowse(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(static.DebugPage))
+}
+
 func main() {
 	if !img.HasExifTool() {
 		log.Println("warning: no exif tool found; no support for comment tagging photos")
@@ -240,13 +245,17 @@ func main() {
 
 	server := http.NewServeMux()
 
+	// REST API
 	server.HandleFunc("/status", handleStatus)
 	server.HandleFunc("/register", handleRegister)
 	server.HandleFunc("/login", handleLogin)
 	server.HandleFunc("/upload/", handleUpload)
 
-	port := fmt.Sprintf("127.0.0.1:%s", fls.cmdPort)
-	err := http.ListenAndServe(port, server)
+	// Browser
+	server.HandleFunc("/browse", handleBrowse)
+
+	addr := fmt.Sprintf("127.0.0.1:%s", fls.cmdPort)
+	err := http.ListenAndServe(addr, server)
 	if err != nil {
 		log.Fatal(err)
 	}
