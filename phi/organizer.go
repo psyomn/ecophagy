@@ -22,9 +22,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"regexp"
+
+	"github.com/psyomn/ecophagy/common"
 )
 
 var supportedFormats = [...]string{
@@ -33,18 +34,6 @@ var supportedFormats = [...]string{
 	"mpeg$", "mp4$",
 	"mkv$", "avi$",
 	"webp$",
-}
-
-func getUserName() string {
-	currentUser, err := user.Current()
-	userStr := ""
-	if err != nil {
-		log.Println("warning: username could not be found; using 'default' as username")
-		userStr = "default"
-	} else {
-		userStr = currentUser.Username
-	}
-	return userStr
 }
 
 func isSupportedFormat(name string) bool {
@@ -64,7 +53,7 @@ func isSupportedFormat(name string) bool {
 // them chronologically in an output directory, in the form of:
 //   $OUTDIR/username/yyyy/mm/
 func SortByModTime(dirPath, outDir string) {
-	userStr := getUserName()
+	userStr, _ := common.GetUserName()
 	filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(dirPath, ": ", err)

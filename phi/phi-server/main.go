@@ -23,10 +23,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
+	"github.com/psyomn/ecophagy/common"
 	"github.com/psyomn/ecophagy/img"
+	"github.com/psyomn/ecophagy/phi/config"
 	"github.com/psyomn/ecophagy/phi/phi-server/static"
 )
 
@@ -35,16 +38,19 @@ const (
 	minPasswordLength = 8
 
 	version = "1.0.0"
-
-	defaultPort = "9876"
 )
 
 type errorResponse struct {
 	Error string `json:"error"`
 }
 
-type cmdFlags struct {
-	cmdPort string
+type session struct {
+	configPath string
+	config     *config.Config
+}
+
+type controller struct {
+	server *server
 }
 
 func respondWithError(w http.ResponseWriter, err error) {
@@ -60,7 +66,7 @@ func respondWithError(w http.ResponseWriter, err error) {
 	w.Write(errRespJSON)
 }
 
-func handleStatus(w http.ResponseWriter, r *http.Request) {
+func (s *controller) handleStatus(w http.ResponseWriter, r *http.Request) {
 	type status struct {
 		Status  string `json:"status"`
 		Version string `json:"version"`
@@ -80,7 +86,7 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 var mutex sync.Mutex
 
 // POST
-func handleRegister(w http.ResponseWriter, r *http.Request) {
+func (s *controller) handleRegister(w http.ResponseWriter, r *http.Request) {
 	type register struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -127,7 +133,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	registerError := registerUser(regReq.Username, regReq.Password, &mutex)
+	registerError := s.server.registerUser(regReq.Username, regReq.Password, &mutex)
 	if registerError != nil {
 		w.WriteHeader(400)
 		errorResponse := errorResponse{Error: registerError.Error()}
@@ -139,7 +145,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleLogin(w http.ResponseWriter, r *http.Request) {
+func (s *controller) handleLogin(w http.ResponseWriter, r *http.Request) {
 	type loginRequest struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -162,7 +168,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := login(loginReq.Username, loginReq.Password)
+	token, err := s.server.login(loginReq.Username, loginReq.Password)
 	if err != nil {
 		respondWithError(w, err)
 		return
@@ -181,7 +187,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Write(tokenJSON)
 }
 
-func handleUpload(w http.ResponseWriter, r *http.Request) {
+func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*150)
@@ -216,12 +222,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srvState.mutex.Lock()
-	fmt.Println(srvState.session)
-	srvState.mutex.Unlock()
-
-	if username, ok := srvState.session[token]; ok {
-		upload(filename, username, timestamp, body[:])
+	if username, ok := s.server.session[token]; ok {
+		s.server.upload(filename, username, timestamp, body[:])
 		return
 	} else {
 		fmt.Println(username)
@@ -229,7 +231,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleBrowse(w http.ResponseWriter, r *http.Request) {
+func (s *controller) handleBrowse(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(static.DebugPage))
 }
 
@@ -238,24 +240,40 @@ func main() {
 		log.Println("warning: no exif tool found; no support for comment tagging photos")
 	}
 
-	fls := &cmdFlags{cmdPort: defaultPort}
-
-	flag.StringVar(&fls.cmdPort, "port", fls.cmdPort, "port to listen at")
+	fls := &session{config: &config.Config{}}
+	flag.StringVar(&fls.configPath, "config", fls.configPath, "path to config")
 	flag.Parse()
 
-	server := http.NewServeMux()
+	{
+		bytes, err := common.FileToBytes(fls.configPath)
+		if err != nil {
+			fmt.Println("error opening file: ", err)
+			os.Exit(1)
+		}
+
+		if err := json.Unmarshal(bytes, fls.config); err != nil {
+			fmt.Println("error unmarshalling: ", err)
+		}
+	}
+
+	httpServer := http.NewServeMux()
+	backend, err := ServerNew()
+	if err != nil {
+		panic(err)
+	}
+	controller := controller{backend}
 
 	// REST API
-	server.HandleFunc("/status", handleStatus)
-	server.HandleFunc("/register", handleRegister)
-	server.HandleFunc("/login", handleLogin)
-	server.HandleFunc("/upload/", handleUpload)
+	httpServer.HandleFunc("/status", controller.handleStatus)
+	httpServer.HandleFunc("/register", controller.handleRegister)
+	httpServer.HandleFunc("/login", controller.handleLogin)
+	httpServer.HandleFunc("/upload/", controller.handleUpload)
 
 	// Browser
-	server.HandleFunc("/browse", handleBrowse)
+	httpServer.HandleFunc("/browse", controller.handleBrowse)
 
-	addr := fmt.Sprintf("127.0.0.1:%s", fls.cmdPort)
-	err := http.ListenAndServe(addr, server)
+	addr := fmt.Sprintf("127.0.0.1:%s", fls.config.Port)
+	err = http.ListenAndServe(addr, httpServer)
 	if err != nil {
 		log.Fatal(err)
 	}

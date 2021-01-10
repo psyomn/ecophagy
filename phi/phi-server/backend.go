@@ -32,20 +32,23 @@ import (
 	"github.com/psyomn/ecophagy/img"
 )
 
-type serverState struct {
+type server struct {
 	session map[string]string
+	db      *sql.DB
 	mutex   sync.Mutex
 }
 
-var (
-	dbHandle *sql.DB
-	dbMutex  sync.Mutex
-	srvState serverState
-)
+func ServerNew() (*server, error) {
+	var state server
+	state.session = make(map[string]string)
 
-func init() {
 	createDbIfNotExist()
-	srvState.session = make(map[string]string)
+	db, err := getDb() // TODO get rid of global
+	if err != nil {
+		return nil, err
+	}
+	state.db = db
+	return &state, nil
 }
 
 func getDb() (*sql.DB, error) {
@@ -99,18 +102,13 @@ func encryptPasswordWithSalt(password string, salt string) string {
 	return string(hashedPassword)
 }
 
-func registerUser(username, password string, mutex *sync.Mutex) error {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (s *server) registerUser(username, password string, mutex *sync.Mutex) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	hashedPassword, saltStr := encryptPassword(password)
-	db, err := getDb()
-	if err != nil {
-		return fmt.Errorf("could not open db to store user: %v", err)
-	}
-	defer db.Close()
 
-	tx, err := db.Begin()
+	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("could not start transaction: %v", err)
 	}
@@ -136,17 +134,11 @@ func registerUser(username, password string, mutex *sync.Mutex) error {
 	return nil
 }
 
-func login(username, password string) (string, error) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (s *server) login(username, password string) (string, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
-	db, err := getDb()
-	if err != nil {
-		return "", fmt.Errorf("could not open db to store user: %v", err)
-	}
-	defer db.Close()
-
-	tx, err := db.Begin()
+	tx, err := s.db.Begin()
 	if err != nil {
 		return "", fmt.Errorf("could not start transaction: %v", err)
 	}
@@ -188,14 +180,12 @@ func login(username, password string) (string, error) {
 	}
 	tokenHex := fmt.Sprintf("%x", userToken)
 
-	srvState.mutex.Lock()
-	defer srvState.mutex.Unlock()
-	srvState.session[tokenHex] = dbUsername
+	s.session[tokenHex] = dbUsername
 
 	return tokenHex, nil
 }
 
-func upload(filename, username, timestamp string, data []byte) error {
+func (s *server) upload(filename, username, timestamp string, data []byte) error {
 	// TODO: I wonder if instead of data []byte we should have stream
 	//       access instead (io.Reader)
 	fh, err := os.Create(filename)

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# set -x -e 
 source "credentials.sh"
 
 LOGIN_OUTPUT=$(curl -s -i \
