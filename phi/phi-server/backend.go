@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
@@ -168,16 +169,25 @@ func (s *backend) login(username, password string) (string, error) {
 	return tokenHex, nil
 }
 
+// TODO: data might be better as a stream type
 func (s *backend) upload(filename, username, timestamp string, data []byte) error {
-	// TODO: I wonder if instead of data []byte we should have stream
-	//       access instead (io.Reader)
-	imgPath := path.Join(s.imgPath, filename)
+	tm, err := strconv.Atoi(timestamp)
+	if err != nil {
+		log.Println("warning: could not parse timestamp:", timestamp, ":", err)
+	}
+	ut := time.Unix(int64(tm), 0)
+	imgDir := fmt.Sprintf("%d-%02d-%02d", ut.Year(), ut.Month(), ut.Day())
+
+	imgPath := path.Join(s.imgPath, imgDir, filename)
+	if err := os.MkdirAll(path.Dir(imgPath), 0755); err != nil {
+		log.Println("could not create img date dir", err)
+	}
+
 	fh, err := os.Create(imgPath)
 	if err != nil {
 		log.Println("could not open file" + err.Error())
 		return err
 	}
-
 	_, err = fh.Write(data)
 	if err != nil {
 		log.Println("could not write file: " + err.Error())
@@ -198,10 +208,8 @@ func (s *backend) upload(filename, username, timestamp string, data []byte) erro
 	if img.HasExifTool() {
 		var cmt userComment
 		cmt.Phi.Username = username
-		tm, err := strconv.Atoi(timestamp)
-		if err == nil {
-			cmt.Phi.Timestamp = int64(tm)
-		}
+		cmt.Phi.Timestamp = int64(tm)
+
 		// default tags
 		cmt.Phi.Tags = []string{"phi", username}
 		return img.SetExifComment(filename, string(cmt.toJSON()))
