@@ -16,8 +16,6 @@ limitations under the License.
 package main
 
 const (
-	dbName = `phidb.sqlite3`
-
 	phiSchema = `CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username STRING UNIQUE,

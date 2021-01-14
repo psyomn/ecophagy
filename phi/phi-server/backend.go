@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,21 +30,27 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/psyomn/ecophagy/common"
 	"github.com/psyomn/ecophagy/img"
 )
 
-type server struct {
+type backend struct {
 	session map[string]string
+	dbPath  string
+	imgPath string
 	db      *sql.DB
 	mutex   sync.Mutex
 }
 
-func ServerNew() (*server, error) {
-	var state server
-	state.session = make(map[string]string)
+func BackendNew(dbPath, imgPath string) (*backend, error) {
+	var state backend
 
-	createDbIfNotExist()
-	db, err := getDb() // TODO get rid of global
+	state.session = make(map[string]string)
+	state.dbPath = dbPath
+	state.imgPath = imgPath
+
+	createDbIfNotExist(state.dbPath)
+	db, err := getDb(state.dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -51,16 +58,16 @@ func ServerNew() (*server, error) {
 	return &state, nil
 }
 
-func getDb() (*sql.DB, error) {
-	return sql.Open("sqlite3", dbName)
+func getDb(dbPath string) (*sql.DB, error) {
+	return sql.Open("sqlite3", dbPath)
 }
 
-func createDbIfNotExist() {
-	if _, err := os.Stat(dbName); !os.IsNotExist(err) {
+func createDbIfNotExist(dbPath string) {
+	if _, err := os.Stat(dbPath); !os.IsNotExist(err) {
 		return
 	}
 
-	db, err := getDb()
+	db, err := getDb(dbPath)
 	if err != nil {
 		panic(err)
 	}
@@ -76,37 +83,11 @@ func createDbIfNotExist() {
 	}
 }
 
-func encryptPassword(password string) (string, string) {
-	saltBytes := make([]byte, 8)
-	_, err := rand.Read(saltBytes)
-	if err != nil {
-		panic(err)
-	}
-	saltStr := string(saltBytes)
-	saltedPassword := []byte(saltStr + password)
-
-	hashedPassword, err := bcrypt.GenerateFromPassword(saltedPassword, 14)
-	if err != nil {
-		panic(err)
-	}
-
-	return string(hashedPassword), saltStr
-}
-
-func encryptPasswordWithSalt(password string, salt string) string {
-	saltedPassword := []byte(salt + password)
-	hashedPassword, err := bcrypt.GenerateFromPassword(saltedPassword, 14)
-	if err != nil {
-		panic(err)
-	}
-	return string(hashedPassword)
-}
-
-func (s *server) registerUser(username, password string, mutex *sync.Mutex) error {
+func (s *backend) registerUser(username, password string, mutex *sync.Mutex) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	hashedPassword, saltStr := encryptPassword(password)
+	hashedPassword, saltStr := common.EncryptPassword(password)
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -134,7 +115,7 @@ func (s *server) registerUser(username, password string, mutex *sync.Mutex) erro
 	return nil
 }
 
-func (s *server) login(username, password string) (string, error) {
+func (s *backend) login(username, password string) (string, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -182,13 +163,16 @@ func (s *server) login(username, password string) (string, error) {
 
 	s.session[tokenHex] = dbUsername
 
+	log.Println("user", dbUsername, "logged in")
+
 	return tokenHex, nil
 }
 
-func (s *server) upload(filename, username, timestamp string, data []byte) error {
+func (s *backend) upload(filename, username, timestamp string, data []byte) error {
 	// TODO: I wonder if instead of data []byte we should have stream
 	//       access instead (io.Reader)
-	fh, err := os.Create(filename)
+	imgPath := path.Join(s.imgPath, filename)
+	fh, err := os.Create(imgPath)
 	if err != nil {
 		log.Println("could not open file" + err.Error())
 		return err
@@ -208,6 +192,8 @@ func (s *server) upload(filename, username, timestamp string, data []byte) error
 	if err != nil {
 		return err
 	}
+
+	log.Println("upload received", imgPath)
 
 	if img.HasExifTool() {
 		var cmt userComment
