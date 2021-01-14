@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 )
@@ -144,3 +145,12 @@ func FileList(dirpath string) ([]string, error) {
 
 // Newline returns the newline symbol accepted as a newline symbol
 func Newline() string { return "\n" }
+
+func GetUserName() (string, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "default", err
+	}
+
+	return currentUser.Username, nil
+}

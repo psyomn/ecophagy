@@ -1,0 +1,5 @@
+{
+    "images_path": "/tmp/phi-store/img/",
+    "database_path": "/tmp/phi-store/database.sqlite3",
+    "port": "9876"
+}
