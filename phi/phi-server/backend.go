@@ -156,16 +156,14 @@ func (s *backend) login(username, password string) (string, error) {
 	}
 
 	userToken := make([]byte, 32)
-	_, err = rand.Read(userToken)
-	if err != nil {
+	if _, err := rand.Read(userToken); err != nil {
 		panic(err)
 	}
-	tokenHex := fmt.Sprintf("%x", userToken)
 
+	tokenHex := fmt.Sprintf("%x", userToken)
 	s.session[tokenHex] = dbUsername
 
 	log.Println("user", dbUsername, "logged in")
-
 	return tokenHex, nil
 }
 
@@ -188,18 +186,17 @@ func (s *backend) upload(filename, username, timestamp string, data []byte) erro
 		log.Println("could not open file" + err.Error())
 		return err
 	}
-	_, err = fh.Write(data)
-	if err != nil {
+
+	if _, err := fh.Write(data); err != nil {
 		log.Println("could not write file: " + err.Error())
 		return err
 	}
-	err = fh.Sync()
-	if err != nil {
+
+	if err := fh.Sync(); err != nil {
 		return err
 	}
 
-	err = fh.Close()
-	if err != nil {
+	if err := fh.Close(); err != nil {
 		return err
 	}
 
