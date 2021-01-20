@@ -21,6 +21,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/psyomn/ecophagy/phi/phi-server/static"
@@ -30,7 +32,20 @@ type controller struct {
 	backend *Backend
 }
 
-// POST
+func (s *controller) checkLogin(r *http.Request) (string, error) {
+	parts := strings.Split(r.Header["Authorization"][0], " ")
+	if len(parts) != 2 {
+		return "", errors.New("badauth: bad authorization header format")
+	}
+
+	token := parts[1]
+	if username, ok := s.backend.session[token]; ok {
+		return username, nil
+	} else {
+		return "", errors.New("need to login")
+	}
+}
+
 func (s *controller) handleRegister(w http.ResponseWriter, r *http.Request) {
 	type register struct {
 		Username string `json:"username"`
@@ -54,6 +69,8 @@ func (s *controller) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	// TODO: Disable special characters / accept only alphanum
 
 	if len(regReq.Password) < minPasswordLength {
 		w.WriteHeader(http.StatusBadRequest)
@@ -183,6 +200,7 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: replace with checkLogin()
 	parts := strings.Split(r.Header["Authorization"][0], " ")
 	if len(parts) != 2 {
 		respondWithError(w, ErrBadAuthHeader)
@@ -208,10 +226,64 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *controller) handleBrowse(w http.ResponseWriter, r *http.Request) {
+	// TODO: might be worth getting rid of this
 	_, err := w.Write([]byte(static.DebugPage))
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+func (s *controller) handleView(w http.ResponseWriter, r *http.Request) {
+	username, err := s.checkLogin(r)
+	if err != nil {
+		respondWithError(w, err)
+		return
+	}
+
+	userPath := path.Join(s.backend.imgPath, username)
+	uriParts := strings.Split(r.RequestURI, "/")
+
+	if r.Method != "GET" {
+		respondWithError(w, errors.New("method not supported"))
+		return
+	}
+
+	if len(uriParts) == 3 {
+		goto viewDirs // GET /view
+	}
+
+	if len(uriParts) == 4 {
+		goto viewFiles // GET /view/yyyy-mm-dd
+	}
+
+	if len(uriParts) == 5 {
+		goto fetchFile // GET /view/yyyy-mm-dd/filename
+	}
+
+viewDirs:
+	type listDirsResponse struct {
+		Files []string `json:"files"`
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if files, err := filepath.Glob(userPath + "/*"); err != nil {
+		respondWithError(w, err)
+	} else {
+		respJSON, _ := json.Marshal(&listDirsResponse{Files: files})
+		w.Write(respJSON)
+	}
+
+	return
+
+viewFiles:
+	w.WriteHeader(http.StatusNotImplemented)
+	w.Write([]byte(`view files`))
+	return
+
+fetchFile:
+	w.WriteHeader(http.StatusNotImplemented)
+	w.Write([]byte(`view file`))
+	return
 }
 
 func respondWithError(w http.ResponseWriter, err error) {

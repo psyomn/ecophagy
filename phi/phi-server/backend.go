@@ -175,7 +175,7 @@ func (s *Backend) upload(filename, username, timestamp string, data []byte) erro
 	ut := time.Unix(int64(tm), 0)
 	imgDir := fmt.Sprintf("%d-%02d-%02d", ut.Year(), ut.Month(), ut.Day())
 
-	imgPath := path.Join(s.imgPath, imgDir, filename)
+	imgPath := path.Join(s.imgPath, username, imgDir, filename)
 	if err := os.MkdirAll(path.Dir(imgPath), 0755); err != nil {
 		log.Println("could not create img date dir", err)
 	}
