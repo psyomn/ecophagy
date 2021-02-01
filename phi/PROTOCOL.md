@@ -39,7 +39,7 @@ GET /view/
     Header/Content-Type: application/json
     RETURN 400, on bad credentials
     RETURN 200, text, on success
-    {"directories": ["2021-01-01", "2021-01-02"]}
+    {"dirs": ["2021-01-01", "2021-01-02"]}
 
 View files in given directory:
 

@@ -262,21 +262,24 @@ func (s *controller) handleView(w http.ResponseWriter, r *http.Request) {
 
 viewDirs:
 	type listDirsResponse struct {
-		Files []string `json:"files"`
+		Dirs []string `json:"dirs"`
 	}
 
-	w.WriteHeader(http.StatusOK)
 	if files, err := filepath.Glob(userPath + "/*"); err != nil {
 		respondWithError(w, err)
 	} else {
-		respJSON, _ := json.Marshal(&listDirsResponse{Files: files})
+		respJSON, _ := json.Marshal(&listDirsResponse{Dirs: files})
+		w.WriteHeader(http.StatusOK)
 		w.Write(respJSON)
 	}
 
 	return
 
 viewFiles:
-	w.WriteHeader(http.StatusNotImplemented)
+	type listFilesResponse struct {
+		Files []string `json:"files"`
+	}
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`view files`))
 	return
 
