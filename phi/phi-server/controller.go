@@ -321,6 +321,49 @@ fetchFile:
 	return
 }
 
+func (s *controller) handleTag(w http.ResponseWriter, r *http.Request) {
+	username, err := s.checkLogin(r)
+
+	uriParts, err := common.PartsOfURLSafe(r.RequestURI)
+	if err != nil && len(uriParts) != 3 {
+		log.Println(err)
+		respondWithError(w, errors.New("malformed url"))
+		return
+	}
+
+	dir := uriParts[1]
+	filename := uriParts[2]
+	imgPath := path.Join(s.backend.imgPath, username, dir, filename)
+
+	switch r.Method {
+	case `GET`:
+		goto getTags
+	case `PATCH`:
+		goto patchTags
+	default:
+		respondWithError(w, errors.New("unsupported method"))
+		return
+	}
+
+getTags:
+	log.Println("get tags")
+	if raw, err := s.backend.getImageTags(imgPath); err != nil {
+		log.Println("respond with error")
+		respondWithError(w, err)
+	} else {
+		log.Println("write")
+		w.WriteHeader(http.StatusOK)
+		w.Write(raw)
+	}
+	log.Println("done")
+	return
+
+patchTags:
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`patchtags`))
+	return
+}
+
 func respondWithError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadRequest)
 	log.Println(err)

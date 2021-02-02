@@ -213,3 +213,16 @@ func (s *Backend) upload(filename, username, timestamp string, data []byte) erro
 
 	return nil
 }
+
+func (s *backend) getImageTags(path string) ([]byte, error) {
+	log.Println("blargh", path)
+	if str, pubErr := img.GetExifComment(path); pubErr == nil {
+		log.Println("blargh ok")
+		return []byte(str), nil
+	} else {
+		log.Println("blargh error")
+		return nil, errors.New("could not get exif tags")
+	}
+
+	return nil, errors.New("AAAA")
+}

@@ -86,6 +86,7 @@ func main() {
 	httpServer.HandleFunc("/login", controller.handleLogin)
 	httpServer.HandleFunc("/upload/", controller.handleUpload)
 	httpServer.HandleFunc("/view/", controller.handleView)
+	httpServer.HandleFunc("/tag/", controller.handleTag)
 
 	// Browser
 	httpServer.HandleFunc("/browse", controller.handleBrowse)
