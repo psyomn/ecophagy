@@ -21,10 +21,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/psyomn/ecophagy/common"
 	"github.com/psyomn/ecophagy/phi/phi-server/static"
 )
 
@@ -240,24 +242,34 @@ func (s *controller) handleView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userPath := path.Join(s.backend.imgPath, username)
-	uriParts := strings.Split(r.RequestURI, "/")
-
 	if r.Method != "GET" {
 		respondWithError(w, errors.New("method not supported"))
 		return
 	}
 
-	if len(uriParts) == 3 {
+	uriParts, err := common.PartsOfURLSafe(r.RequestURI)
+	if err != nil {
+		respondWithError(w, err)
+		return
+	}
+
+	userPath := path.Join(s.backend.imgPath, username)
+
+	dirName := ""
+	pictureName := ""
+	switch len(uriParts) {
+	case 1:
 		goto viewDirs // GET /view
-	}
-
-	if len(uriParts) == 4 {
+	case 2:
+		dirName = uriParts[1]
 		goto viewFiles // GET /view/yyyy-mm-dd
-	}
-
-	if len(uriParts) == 5 {
+	case 3:
+		dirName = uriParts[1]
+		pictureName = uriParts[2]
 		goto fetchFile // GET /view/yyyy-mm-dd/filename
+	default:
+		respondWithError(w, errors.New("bad endpoint"))
+		return
 	}
 
 viewDirs:
@@ -279,13 +291,28 @@ viewFiles:
 	type listFilesResponse struct {
 		Files []string `json:"files"`
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`view files`))
+
+	if files, err := filepath.Glob(userPath + "/" + dirName + "/*"); err != nil {
+		respondWithError(w, err)
+	} else {
+		respJSON, _ := json.Marshal(&listDirsResponse{Dirs: files})
+		w.WriteHeader(http.StatusOK)
+		w.Write(respJSON)
+	}
 	return
 
 fetchFile:
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte(`view file`))
+	w.WriteHeader(http.StatusOK)
+	pic := path.Join(userPath, dirName, pictureName)
+	if fh, err := os.Open(pic); err != nil {
+		respondWithError(w, err)
+	} else {
+		if bytes, err := ioutil.ReadAll(fh); err == nil {
+			w.Write(bytes)
+			fh.Close()
+		}
+	}
+
 	return
 }
 
