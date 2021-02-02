@@ -185,6 +185,12 @@ func (s *controller) handleLogin(w http.ResponseWriter, r *http.Request) {
 func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	username, err := s.checkLogin(r)
+	if err != nil {
+		respondWithError(w, err)
+		return
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*150)
 
 	if r.Method != "POST" {
@@ -192,23 +198,20 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uriParts := strings.Split(r.RequestURI, "/")
-	var filename, timestamp string
-	if len(uriParts) == 4 {
-		filename = uriParts[2]
-		timestamp = uriParts[3]
-	} else {
+	uriParts, err := common.PartsOfURLSafe(r.RequestURI)
+	if err != nil {
+		log.Println(err)
 		respondWithError(w, ErrMalformedURL)
 		return
 	}
 
-	// TODO: replace with checkLogin()
-	parts := strings.Split(r.Header["Authorization"][0], " ")
-	if len(parts) != 2 {
-		respondWithError(w, ErrBadAuthHeader)
+	if len(uriParts) != 3 {
+		respondWithError(w, ErrMalformedURL)
 		return
 	}
-	token := parts[1]
+
+	filename := uriParts[1]
+	timestamp := uriParts[2]
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -222,7 +225,9 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.backend.upload(filename, username, timestamp, body); err != nil {
+	err := s.backend.upload(filename, username, timestamp, body)
+
+	if err != nil {
 		log.Println("could not upload:", err)
 	}
 }
@@ -236,14 +241,14 @@ func (s *controller) handleBrowse(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *controller) handleView(w http.ResponseWriter, r *http.Request) {
-	username, err := s.checkLogin(r)
-	if err != nil {
-		respondWithError(w, err)
+	if r.Method != "GET" {
+		respondWithError(w, errors.New("method not supported"))
 		return
 	}
 
-	if r.Method != "GET" {
-		respondWithError(w, errors.New("method not supported"))
+	username, err := s.checkLogin(r)
+	if err != nil {
+		respondWithError(w, err)
 		return
 	}
 
