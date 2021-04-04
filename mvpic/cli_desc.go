@@ -22,11 +22,15 @@ func desc(id string) movieRecord {
 	defer db.Close()
 
 	rows, err := db.Query(descMovie, id)
-
 	if err != nil {
 		log.Println(err)
 		return ret
 	}
+	if rows.Err() != nil {
+		log.Println(rows.Err())
+		return ret
+	}
+	defer rows.Close()
 
 	rows.Next()
 	err = rows.Scan(

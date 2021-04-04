@@ -57,8 +57,10 @@ func TestEntryParserSimple(t *testing.T) {
 	tests := []tc{
 		{`[{'name': "Loew's Incorporated", 'id': 31892}]`, `Loew's Incorporated`, 30},
 		{`[{'name': "potatoland", 'id': 31892}]`, `potatoland`, 21},
-		{`[{'name': ""I can't believe "you" write like this potatoland"", 'id': 31892}]`,
-			`I can't believe "you" write like this potatoland`, 61},
+		{
+			`[{'name': ""I can't believe "you" write like this potatoland"", 'id': 31892}]`,
+			`I can't believe "you" write like this potatoland`, 61,
+		},
 		{`[{'name': 'potatoland', 'id': 31892}]`, `potatoland`, 21},
 		{`[{'id': 31892, 'name': "Loew's Incorporated", 'nope': 'nope'}]`, `Loew's Incorporated`, 43},
 	}

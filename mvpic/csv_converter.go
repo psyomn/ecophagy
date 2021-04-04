@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,7 +15,7 @@ import (
 
 // MakeDbFromCSV assumes that you have never run this before, creates
 // tables and populates them properly
-func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
+func MakeDBFromCSV(dbpath, csvpath, csvFilename string) error {
 	db, err := sql.Open("sqlite3", dbpath)
 	if err != nil {
 		return err
@@ -47,15 +48,22 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 
 	var movieRec movieRecord
 
-	db.Exec("BEGIN TRANSACTION;")
+	if _, err := db.Exec("BEGIN TRANSACTION;"); err != nil {
+		return err
+	}
+
 	for {
 		// TODO: skip first line, those are the headers
 		fmt.Print(".")
 		line, err := reader.Read()
 
-		if err == io.EOF {
+		// nolint
+		if errors.Is(err, io.EOF) {
 			break // done
-		} else if csvErr, ok := err.(*csv.ParseError); ok && csvErr.Err == csv.ErrFieldCount {
+		} else if errors.Is(err, csv.ErrTrailingComma) ||
+			errors.Is(err, csv.ErrBareQuote) ||
+			errors.Is(err, csv.ErrQuote) ||
+			errors.Is(err, csv.ErrFieldCount) {
 			fmt.Println("Skipping malformed csv line...")
 			continue
 		} else if err != nil {
@@ -65,8 +73,9 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 		movieRec.convertLineParts(line)
 
 		stmt, _ := db.Prepare(insertMovie)
+		defer stmt.Close()
 
-		stmt.Exec(
+		if _, err := stmt.Exec(
 			movieRec.adult,
 			movieRec.belongsToCollection,
 			movieRec.budget,
@@ -90,12 +99,11 @@ func MakeDbFromCSV(dbpath, csvpath, csvFilename string) error {
 			movieRec.title,
 			movieRec.video,
 			movieRec.voteAverage,
-			movieRec.voteCount)
-
-		stmt.Close()
-
+			movieRec.voteCount); err != nil {
+			return err
+		}
 	}
-	db.Exec("COMMIT TRANSACTION;")
 
-	return nil
+	_, err = db.Exec("COMMIT TRANSACTION;")
+	return err
 }

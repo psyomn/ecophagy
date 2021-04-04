@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -71,9 +70,12 @@ func checkFiles() error {
 		}
 
 		if actualHash != expectedHash {
-			errorMsg := fmt.Sprintf("%s bad file hash: expected: %s, got: %s",
-				file, expectedHash, actualHash)
-			return errors.New(errorMsg)
+			return fmt.Errorf(
+				"%w bad file hash: expected: %s, got: %s",
+				ErrNewFileDetected,
+				expectedHash,
+				actualHash,
+			)
 		}
 	}
 
@@ -97,11 +99,10 @@ func setupFiles() {
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func setupDB() {
-	if err := MakeDbFromCSV(dbPath(), dataPath(), "movies_metadata.csv"); err != nil {
+	if err := MakeDBFromCSV(dbPath(), dataPath(), "movies_metadata.csv"); err != nil {
 		panic(err)
 	}
 }

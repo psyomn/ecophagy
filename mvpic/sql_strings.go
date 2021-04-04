@@ -49,19 +49,21 @@ INSERT INTO ratings(movie_id, comment, score) VALUES (?, ?, ?)
     score = excluded.score;
 `
 
-	createWatchList = `
--- table to store movies that one wants to see in the future
-CREATE TABLE IF NOT EXISTS watchlist (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  movie_id INTEGER,
+	// TODO: have not implemented the watchlist yet
+	// 	createWatchList = `
+	// -- table to store movies that one wants to see in the future
+	// CREATE TABLE IF NOT EXISTS watchlist (
+	//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+	//   movie_id INTEGER,
+	//
+	//   -- I sometimes forget why I wanted to watch something, and always
+	//   -- wanted the ability to add a note.
+	//   comment TEXT,
+	//
+	//   FOREIGN KEY movie_id REFERENCES movies(id)
+	// );
+	// `
 
-  -- I sometimes forget why I wanted to watch something, and always
-  -- wanted the ability to add a note.
-  comment TEXT,
-
-  FOREIGN KEY movie_id REFERENCES movies(id)
-);
-`
 	insertMovie = `INSERT INTO movies values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
 
 	createMovieIDIndex = `CREATE INDEX IF NOT EXISTS movie_id_index ON movies(id);`

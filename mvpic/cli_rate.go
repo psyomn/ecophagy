@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"database/sql"
-	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -24,11 +24,11 @@ type ratingInfo struct {
 
 func (s *ratingInfo) validate() error {
 	if s.score < 1 {
-		return errors.New("score can't be below 1")
+		return fmt.Errorf("score too low, min: 10: %w", ErrScoreThreshold)
 	}
 
 	if s.score > 10 {
-		return errors.New("score can't be above 10 (though some movies deserve that)")
+		return fmt.Errorf("score too high, max 10: %w", ErrScoreThreshold)
 	}
 
 	return nil
@@ -45,7 +45,6 @@ func cliRate(id string) {
 
 	if common.HasEditor() {
 		rateThroughEditor(&ri)
-		return
 	} else {
 		rateThroughStdin(&ri)
 	}
@@ -71,13 +70,16 @@ first line is your rating. you can leave any comments below.
 	if err != nil {
 		panic(err)
 	}
-	// defer os.Remove(f.Name())
+	defer os.Remove(f.Name())
 
-	err = ioutil.WriteFile(f.Name(), []byte(sample), 0666)
+	err = ioutil.WriteFile(f.Name(), []byte(sample), 0600)
 	if err != nil {
 		panic(err)
 	}
 
+	// TODO -- wonder if there's something less drastic than doing a
+	// disable here
+	// nolint
 	cmd := exec.Command(common.Editor(), f.Name())
 	fmt.Println(cmd)
 	cmd.Stdout = os.Stdout
@@ -93,7 +95,7 @@ first line is your rating. you can leave any comments below.
 		panic(err)
 	}
 
-	lines := strings.Split(string(maybeContents), common.Newline())
+	lines := strings.Split(string(maybeContents), string(common.KNewline))
 
 	if len(lines) < 2 {
 		panic("movie review not in proper format")
@@ -105,9 +107,7 @@ first line is your rating. you can leave any comments below.
 	}
 
 	ri.score = score
-	ri.comment = strings.Join(lines[1:len(lines)-1], common.Newline())
-
-	rate(ri)
+	ri.comment = strings.Join(lines[1:len(lines)-1], string(common.KNewline))
 }
 
 // stdin input mode
@@ -116,10 +116,20 @@ func rateThroughStdin(ri *ratingInfo) {
 
 	for {
 		fmt.Print("score [1-10]: ")
-		scoreStr, err := reader.ReadString('\n')
-		ri.score, err = strconv.Atoi(scoreStr[0 : len(scoreStr)-1])
-		err = ri.validate()
 
+		scoreStr, err := reader.ReadString('\n')
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		ri.score, err = strconv.Atoi(scoreStr[0 : len(scoreStr)-1])
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		err = ri.validate()
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -129,17 +139,24 @@ func rateThroughStdin(ri *ratingInfo) {
 	}
 
 	fmt.Println("rating comment: ")
-	comment, err := reader.ReadString('\n')
-	ri.comment = comment[0 : len(comment)-1]
 
-	if err != nil {
-		panic(err)
+	var comment string
+	for {
+		var err error
+
+		comment, err = reader.ReadString('\n')
+		if err != nil {
+			continue
+		}
+
+		break
 	}
+
+	ri.comment = comment[0 : len(comment)-1]
 }
 
 func rate(ri *ratingInfo) {
 	db, err := sql.Open("sqlite3", dbPath())
-
 	if err != nil {
 		panic(err)
 	}
@@ -149,9 +166,11 @@ func rate(ri *ratingInfo) {
 	if err != nil {
 		panic(err)
 	}
+	defer stmt.Close()
 
-	stmt.Exec(ri.movieID, ri.comment, ri.score)
-	stmt.Close()
-
-	fmt.Println("rated movie with id:", ri.movieID)
+	if _, err := stmt.Exec(ri.movieID, ri.comment, ri.score); err != nil {
+		log.Println("problem rating movie:", err)
+	} else {
+		fmt.Println("rated movie with id:", ri.movieID)
+	}
 }

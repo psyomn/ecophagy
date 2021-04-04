@@ -25,11 +25,11 @@ func search(t string) []movieRecord {
 	defer db.Close()
 
 	rows, err := db.Query(searchMovieLike, title)
-
 	if err != nil {
 		log.Println(err, "title:", title)
 		return nil
 	}
+	defer rows.Close()
 
 	var ret []movieRecord
 	for rows.Next() {
@@ -71,7 +71,9 @@ func search(t string) []movieRecord {
 		ret = append(ret, mr)
 	}
 
-	rows.Close()
+	if rows.Err() != nil {
+		log.Println(rows.Err())
+	}
 
 	return ret
 }

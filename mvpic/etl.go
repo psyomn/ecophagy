@@ -214,5 +214,4 @@ func parseEntry(line string) (string, int) {
 	}
 
 	return retName, cursor
-
 }
