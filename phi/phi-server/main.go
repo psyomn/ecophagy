@@ -36,10 +36,6 @@ const (
 	version = "1.0.0"
 )
 
-type errorResponse struct {
-	Error string `json:"error"`
-}
-
 type session struct {
 	configPath string
 	config     *config.Config

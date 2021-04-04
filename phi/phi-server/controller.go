@@ -17,7 +17,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -28,7 +27,7 @@ import (
 )
 
 type controller struct {
-	backend *backend
+	backend *Backend
 }
 
 // POST
@@ -39,55 +38,67 @@ func (s *controller) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var regReq register
-	error := json.NewDecoder(r.Body).Decode(&regReq)
-	if error != nil {
-		w.WriteHeader(400)
+	err := json.NewDecoder(r.Body).Decode(&regReq)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		log.Println("problem parsing registration request")
 		errorResponse := errorResponse{Error: "problem parsing registration request"}
 		errRespJSON, err := json.Marshal(&errorResponse)
 		if err != nil {
 			return
 		}
-		w.Write(errRespJSON)
+
+		if _, err := w.Write(errRespJSON); err != nil {
+			log.Println(err)
+		}
 
 		return
 	}
 
 	if len(regReq.Password) < minPasswordLength {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		log.Println("problem registering user with small password")
 		errorResponse := errorResponse{Error: "passwords must be larger than 8 characters"}
 		errRespJSON, err := json.Marshal(&errorResponse)
 		if err != nil {
 			return
 		}
-		w.Write(errRespJSON)
+
+		if _, err := w.Write(errRespJSON); err != nil {
+			log.Println(err)
+		}
 
 		return
 	}
 
 	if len(regReq.Username) < minUsernameLength {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		log.Println("problem registering user with small username")
 		errorResponse := errorResponse{Error: "problem registering user with small username"}
 		errRespJSON, err := json.Marshal(&errorResponse)
 		if err != nil {
 			return
 		}
-		w.Write(errRespJSON)
+
+		if _, err := w.Write(errRespJSON); err != nil {
+			log.Println(err)
+		}
 
 		return
 	}
 
-	registerError := s.backend.registerUser(regReq.Username, regReq.Password, &s.backend.mutex)
+	registerError := s.backend.registerUser(regReq.Username, regReq.Password)
 	if registerError != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		errorResponse := errorResponse{Error: registerError.Error()}
 		errRespJSON, err := json.Marshal(&errorResponse)
 		if err != nil {
 			return
 		}
-		w.Write(errRespJSON)
+
+		if _, err = w.Write(errRespJSON); err != nil {
+			log.Println("problem responding", err)
+		}
 	}
 }
 
@@ -115,9 +126,9 @@ func (s *controller) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var loginReq loginRequest
-	error := json.NewDecoder(r.Body).Decode(&loginReq)
-	if error != nil {
-		respondWithError(w, error)
+	err := json.NewDecoder(r.Body).Decode(&loginReq)
+	if err != nil {
+		respondWithError(w, err)
 		return
 	}
 
@@ -147,7 +158,9 @@ func (s *controller) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(tokenJSON)
+	if _, err := w.Write(tokenJSON); err != nil {
+		log.Println("problem with login request:", err)
+	}
 }
 
 func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
@@ -156,46 +169,49 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*150)
 
 	if r.Method != "POST" {
-		err := errors.New("only post supported.")
-		respondWithError(w, err)
+		respondWithError(w, ErrMethodNotSupported)
 		return
 	}
 
 	uriParts := strings.Split(r.RequestURI, "/")
-	filename := "default-filename"
-	timestamp := "default-timestamp"
+	var filename, timestamp string
 	if len(uriParts) == 4 {
 		filename = uriParts[2]
 		timestamp = uriParts[3]
 	} else {
-		respondWithError(w, errors.New("url: urls is malformed: "+r.RequestURI))
+		respondWithError(w, ErrMalformedURL)
 		return
 	}
 
 	parts := strings.Split(r.Header["Authorization"][0], " ")
 	if len(parts) != 2 {
-		respondWithError(w, errors.New("badauth: expected 'Authorization: token XXX' format"))
+		respondWithError(w, ErrBadAuthHeader)
 		return
 	}
 	token := parts[1]
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		respondWithError(w, errors.New("could not read body"))
+		respondWithError(w, ErrBadBody)
 		return
 	}
 
-	if username, ok := s.backend.session[token]; ok {
-		s.backend.upload(filename, username, timestamp, body[:])
+	username, ok := s.backend.session[token]
+	if !ok {
+		respondWithError(w, ErrNeedLogin)
 		return
-	} else {
-		fmt.Println(username)
-		respondWithError(w, errors.New("please login first"))
+	}
+
+	if err := s.backend.upload(filename, username, timestamp, body); err != nil {
+		log.Println("could not upload:", err)
 	}
 }
 
 func (s *controller) handleBrowse(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(static.DebugPage))
+	_, err := w.Write([]byte(static.DebugPage))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func respondWithError(w http.ResponseWriter, err error) {
@@ -208,5 +224,8 @@ func respondWithError(w http.ResponseWriter, err error) {
 	if err != nil {
 		return
 	}
-	w.Write(errRespJSON)
+
+	if _, err := w.Write(errRespJSON); err != nil {
+		log.Println("problem responding with error:", err)
+	}
 }

@@ -44,7 +44,6 @@ type userComment struct {
 
 func (s *userComment) toJSON() []byte {
 	bytes, err := json.Marshal(s)
-
 	if err != nil {
 		panic("unsupported json marshal field: " + err.Error())
 	}

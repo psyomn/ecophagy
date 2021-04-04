@@ -18,7 +18,6 @@ package main
 import (
 	"crypto/rand"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -29,13 +28,13 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/psyomn/ecophagy/common"
 	"github.com/psyomn/ecophagy/img"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
-type backend struct {
+type Backend struct {
 	session map[string]string
 	dbPath  string
 	imgPath string
@@ -43,15 +42,15 @@ type backend struct {
 	mutex   sync.Mutex
 }
 
-func BackendNew(dbPath, imgPath string) (*backend, error) {
-	var state backend
+func BackendNew(dbPath, imgPath string) (*Backend, error) {
+	var state Backend
 
 	state.session = make(map[string]string)
 	state.dbPath = dbPath
 	state.imgPath = imgPath
 
-	createDbIfNotExist(state.dbPath)
-	db, err := getDb(state.dbPath)
+	createDBIfNotExist(state.dbPath)
+	db, err := getDB(state.dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -59,16 +58,16 @@ func BackendNew(dbPath, imgPath string) (*backend, error) {
 	return &state, nil
 }
 
-func getDb(dbPath string) (*sql.DB, error) {
+func getDB(dbPath string) (*sql.DB, error) {
 	return sql.Open("sqlite3", dbPath)
 }
 
-func createDbIfNotExist(dbPath string) {
+func createDBIfNotExist(dbPath string) {
 	if _, err := os.Stat(dbPath); !os.IsNotExist(err) {
 		return
 	}
 
-	db, err := getDb(dbPath)
+	db, err := getDB(dbPath)
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +83,7 @@ func createDbIfNotExist(dbPath string) {
 	}
 }
 
-func (s *backend) registerUser(username, password string, mutex *sync.Mutex) error {
+func (s *Backend) registerUser(username, password string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -92,7 +91,7 @@ func (s *backend) registerUser(username, password string, mutex *sync.Mutex) err
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return fmt.Errorf("could not start transaction: %v", err)
+		return fmt.Errorf("could not start transaction: %w", err)
 	}
 
 	stmt, err := tx.Prepare(insertUserSQL)
@@ -103,26 +102,27 @@ func (s *backend) registerUser(username, password string, mutex *sync.Mutex) err
 
 	_, err = stmt.Exec(username, hashedPassword, saltStr)
 	if err != nil {
-		tx.Rollback()
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
 
 		if strings.Contains(err.Error(), "UNIQUE") {
-			return errors.New("username has been taken")
+			return ErrUsernameTaken
 		}
 
 		return err
 	}
 
-	tx.Commit()
-	return nil
+	return tx.Commit()
 }
 
-func (s *backend) login(username, password string) (string, error) {
+func (s *Backend) login(username, password string) (string, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return "", fmt.Errorf("could not start transaction: %v", err)
+		return "", fmt.Errorf("could not start transaction: %w", err)
 	}
 
 	stmt, err := tx.Prepare(loginUserSQL)
@@ -139,20 +139,19 @@ func (s *backend) login(username, password string) (string, error) {
 		dbPassword string
 		dbSalt     string
 	)
-	const genericLoginError = "username or passwords do not match"
 
 	err = stmt.QueryRow(username).Scan(
 		&dbUsername, &dbPassword, &dbSalt)
 
 	if err != nil {
-		return "", errors.New(genericLoginError)
+		return "", ErrGenericLoginError
 	}
 
 	passwordsMatchErr := bcrypt.CompareHashAndPassword(
 		[]byte(dbPassword), []byte(dbSalt+password))
 
 	if passwordsMatchErr != nil {
-		return "", errors.New(genericLoginError)
+		return "", ErrGenericLoginError
 	}
 
 	userToken := make([]byte, 32)
@@ -168,7 +167,7 @@ func (s *backend) login(username, password string) (string, error) {
 }
 
 // TODO: data might be better as a stream type
-func (s *backend) upload(filename, username, timestamp string, data []byte) error {
+func (s *Backend) upload(filename, username, timestamp string, data []byte) error {
 	tm, err := strconv.Atoi(timestamp)
 	if err != nil {
 		log.Println("warning: could not parse timestamp:", timestamp, ":", err)
