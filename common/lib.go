@@ -2,7 +2,11 @@ package common
 
 import (
 	"bufio"
+	// TODO -- will revisit and fix this to use something else but
+	//   don't have the time right now
+	// nolint
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,12 +16,14 @@ import (
 	"path/filepath"
 )
 
-const orgName = "ecophagy"
+const (
+	// TODO get rid of this
+	KNewline = '\n'
+	orgName  = "ecophagy"
+)
 
-// FileExists checks if a file exists
 func FileExists(filename string) bool {
-	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-	defer fd.Close()
+	_, err := os.Stat(filename)
 	return err != nil
 }
 
@@ -31,14 +37,17 @@ func DownloadIfNotExist(filename, url string) error {
 	return DownloadFile(filename, url)
 }
 
-// DownloadFile will download a file from a url
-func DownloadFile(filename, url string) error {
-	out, err := os.Create(filename)
+// DownloadFile will download a file from a url to a designated path
+func DownloadFile(path, url string) error {
+	out, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
+	// TODO: will have to recheck whether we really want something as
+	// drastic as disabling here
+	// nolint
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -63,9 +72,8 @@ func FileToLines(filename string) ([]string, error) {
 	var line []byte
 	var ret []string
 
-	for {
-		line, _, err = reader.ReadLine()
-		if err != nil {
+	for ; !errors.Is(err, io.EOF); line, _, err = reader.ReadLine() {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 
@@ -95,12 +103,7 @@ func DataPath() string {
 // PathExists will check if a path exists
 func PathExists(path string) bool {
 	_, err := os.Stat(path)
-
-	if os.IsNotExist(err) {
-		return false
-	}
-
-	return true
+	return !os.IsNotExist(err)
 }
 
 // FileToMd5Sum will calculate the hash of a particular file
@@ -113,6 +116,8 @@ func FileToMd5Sum(path string) (string, error) {
 	}
 	defer fh.Close()
 
+	// TODO -- will come back and fix this
+	// nolint
 	hash := md5.New()
 	if _, err := io.Copy(hash, fh); err != nil {
 		return "", err
@@ -135,16 +140,12 @@ func FileList(dirpath string) ([]string, error) {
 			ret = append(ret, path)
 			return nil
 		})
-
 	if err != nil {
 		return nil, err
 	}
 
 	return ret, nil
 }
-
-// Newline returns the newline symbol accepted as a newline symbol
-func Newline() string { return "\n" }
 
 func GetUserName() (string, error) {
 	currentUser, err := user.Current()

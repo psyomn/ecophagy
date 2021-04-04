@@ -54,7 +54,7 @@ func isSupportedFormat(name string) bool {
 //   $OUTDIR/username/yyyy/mm/
 func SortByModTime(dirPath, outDir string) {
 	userStr, _ := common.GetUserName()
-	filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(dirPath, ": ", err)
 			return err
@@ -96,4 +96,7 @@ func SortByModTime(dirPath, outDir string) {
 
 		return nil
 	})
+	if err != nil {
+		log.Println("problem walking dirs:", err)
+	}
 }

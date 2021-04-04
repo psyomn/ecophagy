@@ -1,40 +1,31 @@
 package common
 
-import (
-	"bufio"
-	"bytes"
-	"os"
-)
+import "bytes"
 
 // ReadSpaceConfig reads a text file, which each line has two
-// continuous strings, delimited by one blank space
+// continuous strings, delimited by one blank space so the configuration
+// would look something like this:
+//
+// blahblah 1234
+// uhoh 3214
+//
+// This is used by `randparty`, and the reason I'm not using a json
+// file for configuration is because I wanted something that is more
+// user friendly (this was being used by some non technical people).
+// I might revisit, remove this, and use the CSV encoder instead.
 func ReadSpaceConfig(filename string) (map[string]string, error) {
-	// space configuration is a key value file, whose key values are
-	// separated by a space, on each line
+	ret := make(map[string]string)
 
-	fd, err := os.Open(filename)
+	bs, err := FileToBytes(filename)
 	if err != nil {
 		return nil, err
 	}
-	defer fd.Close()
 
-	reader := bufio.NewReader(fd)
-	var line []byte
-	ret := map[string]string{}
+	lines := bytes.Split(bs, []byte{byte(KNewline)})
 
-	for {
-		line, _, err = reader.ReadLine()
-		if err != nil {
-			break
-		}
-
-		parts := bytes.Split(line, []byte(" "))
-
-		if len(parts) != 2 {
-			panic(string(parts[0]))
-		}
-
-		ret[string(parts[0])] = string(parts[1])
+	for i := range lines {
+		kv := bytes.Split(lines[i], []byte{' '})
+		ret[string(kv[0])] = string(kv[1])
 	}
 
 	return ret, nil

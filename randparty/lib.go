@@ -1,15 +1,14 @@
-// TODO: must support windows APPDATA path
 package main
+
+// TODO: must support windows APPDATA path
 
 import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"os"
 	"path"
-	"time"
 
 	"github.com/psyomn/ecophagy/common"
 )
@@ -25,8 +24,6 @@ adjct.txt https://raw.githubusercontent.com/taikuukaits/SimpleWordlists/master/W
 `
 )
 
-func initialize() { rand.Seed(time.Now().Unix()) }
-
 func dataPath() string { return path.Join(common.DataPath(), AppName) }
 
 func appFilePath(filename string) string { return path.Join(dataPath(), filename) }
@@ -39,11 +36,11 @@ func createDefaultConfig() error {
 		return err
 	}
 
-	return ioutil.WriteFile(configFile(), []byte(defaultConfig), 0644)
+	return ioutil.WriteFile(configFile(), []byte(defaultConfig), 0600)
 }
 
 func main() {
-	initialize()
+	initializeRandEngine()
 
 	config, err := common.ReadSpaceConfig(configFile())
 	if err != nil {
@@ -122,6 +119,6 @@ func main() {
 			sampleArray(nouns),
 		)
 
-		reader.ReadString('\n')
+		_, _ = reader.ReadString('\n')
 	}
 }

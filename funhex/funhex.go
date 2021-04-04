@@ -23,17 +23,17 @@ func acquireKey() byte {
 }
 
 func applyKey(data []byte, key byte) []byte {
-	var ret []byte
-	for _, byte := range data {
-		ret = append(ret, (byte + key))
+	ret := make([]byte, len(data))
+	for i := range data {
+		ret[i] = data[i] + key
 	}
 	return ret
 }
 
 func unapplyKey(data []byte, key byte) []byte {
-	var ret []byte
-	for _, byte := range data {
-		ret = append(ret, (byte - key))
+	ret := make([]byte, len(data))
+	for i := range data {
+		ret[i] = data[i] - key
 	}
 	return ret
 }
@@ -65,11 +65,12 @@ func textToBinary(path string) ([]byte, error) {
 
 	str := string(bin)
 	values := strings.Split(str, " ")
-	var original []byte
-	for _, vv := range values {
-		decodedByte, err := strconv.ParseInt(vv, 16, 64)
+
+	original := make([]byte, len(values))
+	for i := range values {
+		decodedByte, err := strconv.ParseInt(values[i], 16, 64)
 		panicIf(err)
-		original = append(original, byte(decodedByte))
+		original[i] = byte(decodedByte)
 	}
 
 	return original, nil
@@ -129,7 +130,7 @@ func main() {
 
 		encBin := unapplyKey(bin, key)
 
-		err = ioutil.WriteFile(replaceExt(file, ".bin"), encBin, 0755)
+		err = ioutil.WriteFile(replaceExt(file, ".bin"), encBin, 0600)
 		panicIf(err)
 	}
 
@@ -140,7 +141,7 @@ func main() {
 		str, err := binaryToText(file, key)
 		panicIf(err)
 
-		err = ioutil.WriteFile(replaceExt(file, ".txt"), []byte(str), 0755)
+		err = ioutil.WriteFile(replaceExt(file, ".txt"), []byte(str), 0600)
 		panicIf(err)
 	}
 }

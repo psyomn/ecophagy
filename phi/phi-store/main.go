@@ -23,14 +23,15 @@ import (
 	"github.com/psyomn/phi"
 )
 
-var (
-	inDir  = ""
-	outDir = ""
-)
+type session struct {
+	inDir  string
+	outDir string
+}
 
-func init() {
-	flag.StringVar(&inDir, "dir", inDir, "input directory")
-	flag.StringVar(&outDir, "output", outDir, "output directory")
+func makeFlags(sess *session) {
+	flag.StringVar(&sess.inDir, "dir", sess.inDir, "input directory")
+	flag.StringVar(&sess.outDir, "output", sess.outDir, "output directory")
+	flag.Parse()
 }
 
 // Print usage
@@ -39,12 +40,13 @@ func usage() {
 }
 
 func main() {
-	flag.Parse()
+	sess := &session{}
+	makeFlags(sess)
 
-	if inDir == "" || outDir == "" {
+	if sess.inDir == "" || sess.outDir == "" {
 		usage()
 		os.Exit(1)
 	}
 
-	phi.SortByModTime(inDir, outDir)
+	phi.SortByModTime(sess.inDir, sess.outDir)
 }
