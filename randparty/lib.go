@@ -122,6 +122,6 @@ func main() {
 			sampleArray(nouns),
 		)
 
-		reader.ReadString('\n')
+		_, _ = reader.ReadString('\n')
 	}
 }
