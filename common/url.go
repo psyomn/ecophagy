@@ -1,13 +1,12 @@
 package common
 
 import (
-	"errors"
 	"strings"
 )
 
 func PartsOfURLSafe(url string) ([]string, error) {
 	if strings.Contains(url, `..`) {
-		return nil, errors.New("unsafe url: detected .. attempt")
+		return nil, ErrUnsafeURL
 	}
 
 	parts := strings.Split(url, "/")

@@ -16,16 +16,22 @@ func TestPartsOfURLSafeSimple(t *testing.T) {
 		{"/a/b/c/", []string{"a", "b", "c"}},
 	}
 
-	for index := range tcs {
-		t.Run(tcs[index].input, func(t *testing.T) {
-			parts, err := PartsOfURLSafe(tcs[index].input)
+	// TODO: think about a better way to do this in the future
+	// nolint
+	makeTestFn := func(tc *tc, upt *testing.T) func(t *testing.T) {
+		return func(t *testing.T) {
+			parts, err := PartsOfURLSafe(tc.input)
 			if err != nil {
 				t.Fatal("err should be nil:", err)
 			}
-			if !reflect.DeepEqual(parts, tcs[index].expected) {
-				t.Fatal("expected", tcs[index].expected, "got:", parts)
+			if !reflect.DeepEqual(parts, tc.expected) {
+				t.Fatal("expected:", tc.expected, "got:", parts)
 			}
-		})
+		}
+	}
+
+	for index := range tcs {
+		t.Run(tcs[index].input, makeTestFn(&tcs[index], t))
 	}
 }
 
@@ -44,15 +50,21 @@ func TestPartsOfURLSafeDirectoryTraversalAttempt(t *testing.T) {
 		{"/a/b/c", false},
 	}
 
-	for index := range tcs {
-		t.Run(tcs[index].input, func(t *testing.T) {
-			val, err := PartsOfURLSafe(tcs[index].input)
-			if err == nil && tcs[index].expectedErrNil {
+	// TODO: think about a better way to do this in the future
+	// nolint
+	makeTestFn := func(tc *tc, upt *testing.T) func(t *testing.T) {
+		return func(t *testing.T) {
+			val, err := PartsOfURLSafe(tc.input)
+			if err == nil && tc.expectedErrNil {
 				t.Fatal("err should not be nil:", err, "value:", val)
 			}
-			if val != nil && tcs[index].expectedErrNil {
+			if val != nil && tc.expectedErrNil {
 				t.Fatal("value should be nil:", val)
 			}
-		})
+		}
+	}
+
+	for index := range tcs {
+		t.Run(tcs[index].input, makeTestFn(&tcs[index], t))
 	}
 }

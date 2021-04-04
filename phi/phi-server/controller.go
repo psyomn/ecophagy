@@ -37,15 +37,15 @@ type controller struct {
 func (s *controller) checkLogin(r *http.Request) (string, error) {
 	parts := strings.Split(r.Header["Authorization"][0], " ")
 	if len(parts) != 2 {
-		return "", errors.New("badauth: bad authorization header format")
+		return "", ErrBadAuthHeader
 	}
 
 	token := parts[1]
 	if username, ok := s.backend.session[token]; ok {
 		return username, nil
-	} else {
-		return "", errors.New("need to login")
 	}
+
+	return "", ErrNeedLogin
 }
 
 func (s *controller) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -219,14 +219,7 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, ok := s.backend.session[token]
-	if !ok {
-		respondWithError(w, ErrNeedLogin)
-		return
-	}
-
-	err := s.backend.upload(filename, username, timestamp, body)
-
+	err = s.backend.upload(filename, username, timestamp, body)
 	if err != nil {
 		log.Println("could not upload:", err)
 	}
@@ -242,7 +235,7 @@ func (s *controller) handleBrowse(w http.ResponseWriter, r *http.Request) {
 
 func (s *controller) handleView(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		respondWithError(w, errors.New("method not supported"))
+		respondWithError(w, ErrMethodNotSupported)
 		return
 	}
 
@@ -273,61 +266,89 @@ func (s *controller) handleView(w http.ResponseWriter, r *http.Request) {
 		pictureName = uriParts[2]
 		goto fetchFile // GET /view/yyyy-mm-dd/filename
 	default:
-		respondWithError(w, errors.New("bad endpoint"))
+		respondWithError(w, ErrBadEndpoint)
 		return
 	}
 
 viewDirs:
-	type listDirsResponse struct {
-		Dirs []string `json:"dirs"`
-	}
+	{
+		type listDirsResponse struct {
+			Dirs []string `json:"dirs"`
+		}
 
-	if files, err := filepath.Glob(userPath + "/*"); err != nil {
-		respondWithError(w, err)
-	} else {
-		respJSON, _ := json.Marshal(&listDirsResponse{Dirs: files})
-		w.WriteHeader(http.StatusOK)
-		w.Write(respJSON)
-	}
+		if files, err := filepath.Glob(userPath + "/*"); err != nil {
+			respondWithError(w, err)
+		} else {
+			respJSON, _ := json.Marshal(&listDirsResponse{Dirs: files})
+			w.WriteHeader(http.StatusOK)
+			if _, err := w.Write(respJSON); err != nil {
+				log.Println(err)
+			}
+		}
 
-	return
+		return
+	}
 
 viewFiles:
-	type listFilesResponse struct {
-		Files []string `json:"files"`
-	}
+	{
+		type listFilesResponse struct {
+			Files []string `json:"files"`
+		}
 
-	if files, err := filepath.Glob(userPath + "/" + dirName + "/*"); err != nil {
-		respondWithError(w, err)
-	} else {
-		respJSON, _ := json.Marshal(&listDirsResponse{Dirs: files})
+		files, err := filepath.Glob(userPath + "/" + dirName + "/*")
+
+		if err != nil {
+			respondWithError(w, err)
+			return
+		}
+
+		respJSON, _ := json.Marshal(&listFilesResponse{Files: files})
 		w.WriteHeader(http.StatusOK)
-		w.Write(respJSON)
+
+		if _, err := w.Write(respJSON); err != nil {
+			log.Println(err)
+		}
+
+		return
 	}
-	return
 
 fetchFile:
-	w.WriteHeader(http.StatusOK)
-	pic := path.Join(userPath, dirName, pictureName)
-	if fh, err := os.Open(pic); err != nil {
-		respondWithError(w, err)
-	} else {
-		if bytes, err := ioutil.ReadAll(fh); err == nil {
-			w.Write(bytes)
-			fh.Close()
-		}
-	}
+	{
+		w.WriteHeader(http.StatusOK)
+		pic := path.Join(userPath, dirName, pictureName)
 
-	return
+		fh, err := os.Open(pic)
+		if err != nil {
+			respondWithError(w, err)
+			return
+		}
+		defer fh.Close()
+
+		bytes, err := ioutil.ReadAll(fh)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		if _, err := w.Write(bytes); err != nil {
+			log.Println(err)
+		}
+
+		return
+	}
 }
 
 func (s *controller) handleTag(w http.ResponseWriter, r *http.Request) {
 	username, err := s.checkLogin(r)
+	if err != nil {
+		respondWithError(w, ErrNeedLogin)
+		return
+	}
 
 	uriParts, err := common.PartsOfURLSafe(r.RequestURI)
 	if err != nil && len(uriParts) != 3 {
 		log.Println(err)
-		respondWithError(w, errors.New("malformed url"))
+		respondWithError(w, ErrMalformedURL)
 		return
 	}
 
@@ -341,27 +362,37 @@ func (s *controller) handleTag(w http.ResponseWriter, r *http.Request) {
 	case `PATCH`:
 		goto patchTags
 	default:
-		respondWithError(w, errors.New("unsupported method"))
+		respondWithError(w, ErrMethodNotSupported)
 		return
 	}
 
 getTags:
-	log.Println("get tags")
-	if raw, err := s.backend.getImageTags(imgPath); err != nil {
-		log.Println("respond with error")
-		respondWithError(w, err)
-	} else {
+	{
+		log.Println("get tags")
+		raw, err := s.backend.getImageTags(imgPath)
+		if err != nil {
+			log.Println("respond with error")
+			respondWithError(w, err)
+			return
+		}
+
 		log.Println("write")
 		w.WriteHeader(http.StatusOK)
-		w.Write(raw)
+		if _, err := w.Write(raw); err != nil {
+			log.Println(err)
+		}
+		log.Println("done")
+		return
 	}
-	log.Println("done")
-	return
 
 patchTags:
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`patchtags`))
-	return
+	{
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(`patchtags`)); err != nil {
+			log.Println(err)
+		}
+		return
+	}
 }
 
 func respondWithError(w http.ResponseWriter, err error) {

@@ -11,6 +11,7 @@ var (
 	ErrMalformedURL       = errors.New("url is malformed")
 	ErrBadAuthHeader      = errors.New("badauth: expected 'Authorization: token XXX' format")
 	ErrBadBody            = errors.New("could not read body")
+	ErrBadEndpoint        = errors.New("bad endpoint")
 	ErrNeedLogin          = errors.New("login needed")
 	ErrSmallPassword      = errors.New("password too small")
 	ErrSmallUsername      = errors.New("username too small")
