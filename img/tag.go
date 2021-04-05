@@ -36,6 +36,6 @@ func GetExifComment(filename string) (string, error) {
 //   exiftool -comment="blargh" picture.jpg
 func SetExifComment(filename string, comment string) error {
 	cmdComment := fmt.Sprintf("-comment=%s", comment)
-	err := exec.Command("exiftool", cmdComment, filename).Run()
+	_, err := exec.Command("exiftool", cmdComment, filename).Output()
 	return err
 }

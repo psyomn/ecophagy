@@ -192,11 +192,11 @@ func (s *Backend) upload(filename, username, timestamp string, data []byte) erro
 	}
 
 	if err := fh.Sync(); err != nil {
-		return err
+		return fmt.Errorf("error syncing uploaded file: %w", err)
 	}
 
 	if err := fh.Close(); err != nil {
-		return err
+		return fmt.Errorf("error closing uploaded file: %w", err)
 	}
 
 	log.Println("upload received", imgPath)
@@ -205,10 +205,11 @@ func (s *Backend) upload(filename, username, timestamp string, data []byte) erro
 		var cmt userComment
 		cmt.Phi.Username = username
 		cmt.Phi.Timestamp = int64(tm)
-
-		// default tags
 		cmt.Phi.Tags = []string{"phi", username}
-		return img.SetExifComment(filename, string(cmt.toJSON()))
+
+		if err := img.SetExifComment(imgPath, string(cmt.toJSON())); err != nil {
+			return fmt.Errorf("error executing exif tool: %w", err)
+		}
 	}
 
 	return nil
