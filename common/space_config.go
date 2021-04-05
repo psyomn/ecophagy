@@ -1,6 +1,8 @@
 package common
 
-import "bytes"
+import (
+	"bytes"
+)
 
 // ReadSpaceConfig reads a text file, which each line has two
 // continuous strings, delimited by one blank space so the configuration
@@ -25,6 +27,9 @@ func ReadSpaceConfig(filename string) (map[string]string, error) {
 
 	for i := range lines {
 		kv := bytes.Split(lines[i], []byte{' '})
+		if len(kv) < 2 {
+			break
+		}
 		ret[string(kv[0])] = string(kv[1])
 	}
 
