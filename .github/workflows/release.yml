@@ -19,7 +19,6 @@ jobs:
     - name: Build Artifacts
       run: make artifacts
 
-    - uses: actions/checkout@v1
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "artifacts-linux-x64/,artifacts-windows-x64/,artifacts-arm-x64/"
