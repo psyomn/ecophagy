@@ -19,6 +19,19 @@ jobs:
         go-version: 1.15
 
     - name: Test
-      run: make test 
-      
-      
+      run: make test
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: linux-x64
+        path: artifacts-linux-x64
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: windows-x64
+        path: artifacts-windows-x64
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: linux-arm-x64
+        path: artifacts-arm-x64
