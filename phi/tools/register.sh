@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 source "credentials.sh"
-curl -s -i -X POST "http://127.0.0.1:9876/register" -d "{\"username\":\"$PHIUSER\",\"password\":\"$PHIPASS\"}"
+source "constants.sh"
+curl -s -i -X POST "$PHI_SERVER_HOST:$PHI_SERVER_PORT/register" \
+     -d "{\"username\":\"$PHIUSER\",\"password\":\"$PHIPASS\"}"

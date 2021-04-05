@@ -175,7 +175,7 @@ func (s *Backend) upload(filename, username, timestamp string, data []byte) erro
 	ut := time.Unix(int64(tm), 0)
 	imgDir := fmt.Sprintf("%d-%02d-%02d", ut.Year(), ut.Month(), ut.Day())
 
-	imgPath := path.Join(s.imgPath, imgDir, filename)
+	imgPath := path.Join(s.imgPath, username, imgDir, filename)
 	if err := os.MkdirAll(path.Dir(imgPath), 0755); err != nil {
 		log.Println("could not create img date dir", err)
 	}
@@ -192,11 +192,11 @@ func (s *Backend) upload(filename, username, timestamp string, data []byte) erro
 	}
 
 	if err := fh.Sync(); err != nil {
-		return err
+		return fmt.Errorf("error syncing uploaded file: %w", err)
 	}
 
 	if err := fh.Close(); err != nil {
-		return err
+		return fmt.Errorf("error closing uploaded file: %w", err)
 	}
 
 	log.Println("upload received", imgPath)
@@ -205,11 +205,17 @@ func (s *Backend) upload(filename, username, timestamp string, data []byte) erro
 		var cmt userComment
 		cmt.Phi.Username = username
 		cmt.Phi.Timestamp = int64(tm)
-
-		// default tags
 		cmt.Phi.Tags = []string{"phi", username}
-		return img.SetExifComment(filename, string(cmt.toJSON()))
+
+		if err := img.SetExifComment(imgPath, string(cmt.toJSON())); err != nil {
+			return fmt.Errorf("error executing exif tool: %w", err)
+		}
 	}
 
 	return nil
+}
+
+func (s *Backend) getImageTags(path string) ([]byte, error) {
+	str, err := img.GetExifComment(path)
+	return []byte(str), err
 }

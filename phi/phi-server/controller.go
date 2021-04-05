@@ -21,8 +21,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
+	"github.com/psyomn/ecophagy/common"
 	"github.com/psyomn/ecophagy/phi/phi-server/static"
 )
 
@@ -30,7 +34,20 @@ type controller struct {
 	backend *Backend
 }
 
-// POST
+func (s *controller) checkLogin(r *http.Request) (string, error) {
+	parts := strings.Split(r.Header["Authorization"][0], " ")
+	if len(parts) != 2 {
+		return "", ErrBadAuthHeader
+	}
+
+	token := parts[1]
+	if username, ok := s.backend.session[token]; ok {
+		return username, nil
+	}
+
+	return "", ErrNeedLogin
+}
+
 func (s *controller) handleRegister(w http.ResponseWriter, r *http.Request) {
 	type register struct {
 		Username string `json:"username"`
@@ -54,6 +71,8 @@ func (s *controller) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	// TODO: Disable special characters / accept only alphanum
 
 	if len(regReq.Password) < minPasswordLength {
 		w.WriteHeader(http.StatusBadRequest)
@@ -166,6 +185,12 @@ func (s *controller) handleLogin(w http.ResponseWriter, r *http.Request) {
 func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	username, err := s.checkLogin(r)
+	if err != nil {
+		respondWithError(w, err)
+		return
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*150)
 
 	if r.Method != "POST" {
@@ -173,22 +198,20 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uriParts := strings.Split(r.RequestURI, "/")
-	var filename, timestamp string
-	if len(uriParts) == 4 {
-		filename = uriParts[2]
-		timestamp = uriParts[3]
-	} else {
+	uriParts, err := common.PartsOfURLSafe(r.RequestURI)
+	if err != nil {
+		log.Println(err)
 		respondWithError(w, ErrMalformedURL)
 		return
 	}
 
-	parts := strings.Split(r.Header["Authorization"][0], " ")
-	if len(parts) != 2 {
-		respondWithError(w, ErrBadAuthHeader)
+	if len(uriParts) != 3 {
+		respondWithError(w, ErrMalformedURL)
 		return
 	}
-	token := parts[1]
+
+	filename := uriParts[1]
+	timestamp := uriParts[2]
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -196,21 +219,179 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, ok := s.backend.session[token]
-	if !ok {
-		respondWithError(w, ErrNeedLogin)
-		return
-	}
-
-	if err := s.backend.upload(filename, username, timestamp, body); err != nil {
+	err = s.backend.upload(filename, username, timestamp, body)
+	if err != nil {
 		log.Println("could not upload:", err)
 	}
 }
 
 func (s *controller) handleBrowse(w http.ResponseWriter, r *http.Request) {
+	// TODO: might be worth getting rid of this
 	_, err := w.Write([]byte(static.DebugPage))
 	if err != nil {
 		log.Println(err)
+	}
+}
+
+func (s *controller) handleView(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		respondWithError(w, ErrMethodNotSupported)
+		return
+	}
+
+	username, err := s.checkLogin(r)
+	if err != nil {
+		respondWithError(w, err)
+		return
+	}
+
+	uriParts, err := common.PartsOfURLSafe(r.RequestURI)
+	if err != nil {
+		respondWithError(w, err)
+		return
+	}
+
+	userPath := path.Join(s.backend.imgPath, username)
+
+	dirName := ""
+	pictureName := ""
+	switch len(uriParts) {
+	case 1:
+		goto viewDirs // GET /view
+	case 2:
+		dirName = uriParts[1]
+		goto viewFiles // GET /view/yyyy-mm-dd
+	case 3:
+		dirName = uriParts[1]
+		pictureName = uriParts[2]
+		goto fetchFile // GET /view/yyyy-mm-dd/filename
+	default:
+		respondWithError(w, ErrBadEndpoint)
+		return
+	}
+
+viewDirs:
+	{
+		type listDirsResponse struct {
+			Dirs []string `json:"dirs"`
+		}
+
+		if files, err := filepath.Glob(userPath + "/*"); err != nil {
+			respondWithError(w, err)
+		} else {
+			respJSON, _ := json.Marshal(&listDirsResponse{Dirs: files})
+			w.WriteHeader(http.StatusOK)
+			if _, err := w.Write(respJSON); err != nil {
+				log.Println(err)
+			}
+		}
+
+		return
+	}
+
+viewFiles:
+	{
+		type listFilesResponse struct {
+			Files []string `json:"files"`
+		}
+
+		files, err := filepath.Glob(userPath + "/" + dirName + "/*")
+
+		if err != nil {
+			respondWithError(w, err)
+			return
+		}
+
+		respJSON, _ := json.Marshal(&listFilesResponse{Files: files})
+		w.WriteHeader(http.StatusOK)
+
+		if _, err := w.Write(respJSON); err != nil {
+			log.Println(err)
+		}
+
+		return
+	}
+
+fetchFile:
+	{
+		w.WriteHeader(http.StatusOK)
+		pic := path.Join(userPath, dirName, pictureName)
+
+		fh, err := os.Open(pic)
+		if err != nil {
+			respondWithError(w, err)
+			return
+		}
+		defer fh.Close()
+
+		bytes, err := ioutil.ReadAll(fh)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		if _, err := w.Write(bytes); err != nil {
+			log.Println(err)
+		}
+
+		return
+	}
+}
+
+func (s *controller) handleTag(w http.ResponseWriter, r *http.Request) {
+	username, err := s.checkLogin(r)
+	if err != nil {
+		respondWithError(w, ErrNeedLogin)
+		return
+	}
+
+	uriParts, err := common.PartsOfURLSafe(r.RequestURI)
+	if err != nil && len(uriParts) != 3 {
+		log.Println(err)
+		respondWithError(w, ErrMalformedURL)
+		return
+	}
+
+	dir := uriParts[1]
+	filename := uriParts[2]
+	imgPath := path.Join(s.backend.imgPath, username, dir, filename)
+
+	switch r.Method {
+	case `GET`:
+		goto getTags
+	case `PATCH`:
+		goto patchTags
+	default:
+		respondWithError(w, ErrMethodNotSupported)
+		return
+	}
+
+getTags:
+	{
+		log.Println("get tags")
+		raw, err := s.backend.getImageTags(imgPath)
+		if err != nil {
+			log.Println("respond with error")
+			respondWithError(w, err)
+			return
+		}
+
+		log.Println("write")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write(raw); err != nil {
+			log.Println(err)
+		}
+		log.Println("done")
+		return
+	}
+
+patchTags:
+	{
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(`patchtags`)); err != nil {
+			log.Println(err)
+		}
+		return
 	}
 }
 

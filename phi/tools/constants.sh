@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+PHI_SERVER_PORT=9876
+PHI_SERVER_HOST=127.0.0.1

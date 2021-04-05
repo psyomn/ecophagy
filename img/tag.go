@@ -10,7 +10,6 @@ package img
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 )
 
@@ -20,25 +19,23 @@ func HasExifTool() bool {
 }
 
 // Wrapper for actual command:
-//   exiftool -comment picture.jpg
+//   exiftool -s -s -s -comment picture.jpg
 func GetExifComment(filename string) (string, error) {
-	stdout, err := exec.Command("exiftool", "-comment", filename).StdoutPipe()
+	out, err := exec.Command(
+		"exiftool", "-s", "-s", "-s",
+		"-comment", filename,
+	).Output()
+
 	if err != nil {
 		return "", err
 	}
-
-	bytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes), nil
+	return string(out), nil
 }
 
 // Wrapper for actual command:
 //   exiftool -comment="blargh" picture.jpg
 func SetExifComment(filename string, comment string) error {
 	cmdComment := fmt.Sprintf("-comment=%s", comment)
-	err := exec.Command("exiftool", cmdComment, filename).Run()
+	_, err := exec.Command("exiftool", cmdComment, filename).Output()
 	return err
 }

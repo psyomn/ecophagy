@@ -19,3 +19,11 @@ Soft Dependencies:
 - exiftool: will add metadata through embedding json inside the
   comment exif field. If you don't have exiftool, then images will
   simply not be tagged.
+
+# start simple server:
+
+```bash
+phi-server -config phi/phi-server/config.sample.json
+```
+
+Make sure to read the configuration.
