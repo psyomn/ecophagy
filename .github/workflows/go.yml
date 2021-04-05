@@ -21,6 +21,9 @@ jobs:
     - name: Test
       run: make test
 
+    - name: Build Artifacts
+      run: make artifacts
+
     - uses: actions/upload-artifact@v2
       with:
         name: linux-x64
