@@ -1,6 +1,6 @@
 module github.com/psyomn/ecophagy
 
-go 1.12
+go 1.16
 
 require (
 	github.com/mattn/go-sqlite3 v1.14.2
