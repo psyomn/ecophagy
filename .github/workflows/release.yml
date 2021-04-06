@@ -11,6 +11,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: install multilibs
+      run: sudo apt-get install gcc-multilib gcc-mingw-w64
+
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
