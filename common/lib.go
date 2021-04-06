@@ -22,11 +22,6 @@ const (
 	orgName  = "ecophagy"
 )
 
-func FileExists(filename string) bool {
-	_, err := os.Stat(filename)
-	return err != nil
-}
-
 // DownloadIfNotExist will check for a filename, and if it doesn't
 // exist, will attempt to download it by a provided url.
 func DownloadIfNotExist(filename, url string) error {
