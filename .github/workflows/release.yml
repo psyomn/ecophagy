@@ -24,9 +24,8 @@ jobs:
         make artifacts
         zip -9r artifacts-linux-x64.zip artifacts-linux-x64/*
         zip -9r artifacts-windows-x64.zip artifacts-windows-x64/*
-        zip -9r artifacts-arm-x64.zip artifacts-arm-x64/*
 
     - uses: ncipollo/release-action@v1
       with:
-        artifacts: "artifacts-linux-x64.zip,artifacts-windows-x64.zip,artifacts-arm-x64.zip"
+        artifacts: "artifacts-linux-x64.zip,artifacts-windows-x64.zip"
         token: ${{ secrets.GITHUB_TOKEN }}

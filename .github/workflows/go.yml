@@ -36,8 +36,3 @@ jobs:
       with:
         name: windows-x64
         path: artifacts-windows-x64
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: linux-arm-x64
-        path: artifacts-arm-x64
