@@ -1,3 +1,7 @@
+// +build ignore
+// This is used to compile a binary for the windows special build
+// (just the uploader and not the whole psy toolkit)
+
 /*
 Copyright 2019 Simon Symeonidis (psyomn)
 
@@ -13,40 +17,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package main
 
-import (
-	"flag"
-	"fmt"
-	"os"
-
-	"github.com/psyomn/phi"
-)
-
-type session struct {
-	inDir  string
-	outDir string
-}
-
-func makeFlags(sess *session) {
-	flag.StringVar(&sess.inDir, "dir", sess.inDir, "input directory")
-	flag.StringVar(&sess.outDir, "output", sess.outDir, "output directory")
-	flag.Parse()
-}
-
-// Print usage
-func usage() {
-	fmt.Println("phi-store -dir <in-dir> -output <out-dir>")
-}
+import "github.com/psyomn/ecophagy/psy/uploader"
 
 func main() {
-	sess := &session{}
-	makeFlags(sess)
-
-	if sess.inDir == "" || sess.outDir == "" {
-		usage()
-		os.Exit(1)
-	}
-
-	phi.SortByModTime(sess.inDir, sess.outDir)
+	uploader.Run(nil)
 }
