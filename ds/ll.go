@@ -11,13 +11,13 @@ var (
 	ErrEmptyList = errors.New("linked list is empty")
 )
 
-type node struct {
-	next *node
-	item interface{}
+type Node struct {
+	next *Node
+	Item interface{}
 }
 
 type LinkedList struct {
-	head *node
+	head *Node
 	size uint64
 }
 
@@ -30,20 +30,20 @@ func (s *LinkedList) Peek() (interface{}, error) {
 		return nil, ErrEmptyList
 	}
 
-	return s.head.item, nil
+	return s.head.Item, nil
 }
 
 func (s *LinkedList) Add(item interface{}) {
 	cursor := s.nextEmpty()
 	if cursor == nil {
-		s.head = &node{}
-		s.head.item = item
+		s.head = &Node{}
+		s.head.Item = item
 	} else {
-		cursor.next = &node{}
+		cursor.next = &Node{}
 		cursor = cursor.next
-		cursor.item = item
+		cursor.Item = item
 	}
-	s.size += 1
+	s.size++
 }
 
 func (s *LinkedList) Delete(item interface{}) error {
@@ -55,14 +55,14 @@ func (s *LinkedList) Delete(item interface{}) error {
 	// pray to the garbage collector, ohmmmmm
 	lag.next = node.next
 
-	s.size -= 1
+	s.size--
 	return nil
 }
 
-func (s *LinkedList) Find(item interface{}) (*node, *node, error) {
+func (s *LinkedList) Find(item interface{}) (*Node, *Node, error) {
 	lag := s.head
 	for cursor := s.head; cursor != nil; cursor = cursor.next {
-		if cursor.item == item {
+		if cursor.Item == item {
 			return cursor, lag, nil
 		}
 		lag = cursor
@@ -79,7 +79,7 @@ func (s *LinkedList) Length() uint64 {
 	return s.size
 }
 
-func (s *LinkedList) nextEmpty() *node {
+func (s *LinkedList) nextEmpty() *Node {
 	if s.head == nil {
 		return nil
 	}

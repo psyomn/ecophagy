@@ -49,10 +49,10 @@ func TestLinkedListFind(t *testing.T) {
 	}
 
 	if node == nil {
-		t.Errorf("should have node data")
+		t.Fatalf("%s", "should have node data")
 	}
 
-	value := node.item.(int)
+	value := node.Item.(int)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -77,9 +77,10 @@ func TestLinkedListFindSmall(t *testing.T) {
 
 	if node == nil {
 		t.Errorf("should have node data")
+		return
 	}
 
-	value := node.item.(int)
+	value := node.Item.(int)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
