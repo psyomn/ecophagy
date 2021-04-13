@@ -139,7 +139,8 @@ func parseImdbID(id string) uint64 {
 	// and store ints for more compact space...
 
 	if len(id) < 2 {
-		log.Println("movie has no imdb id")
+		// TODO: better error handling here
+		// log.Println("movie has no imdb id")
 		return 0
 	}
 

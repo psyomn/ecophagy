@@ -52,9 +52,14 @@ func MakeDBFromCSV(dbpath, csvpath, csvFilename string) error {
 		return err
 	}
 
+	stmt, _ := db.Prepare(insertMovie)
+	defer stmt.Close()
+
+	// discard first line, as it contains the headers of the CSV table
+	_, _ = reader.Read()
+	counter := 0
+
 	for {
-		// TODO: skip first line, those are the headers
-		fmt.Print(".")
 		line, err := reader.Read()
 
 		// nolint
@@ -65,15 +70,12 @@ func MakeDBFromCSV(dbpath, csvpath, csvFilename string) error {
 			errors.Is(err, csv.ErrQuote) ||
 			errors.Is(err, csv.ErrFieldCount) {
 			fmt.Println("Skipping malformed csv line...")
-			continue
+			goto incrContinue
 		} else if err != nil {
 			return err
 		}
 
 		movieRec.convertLineParts(line)
-
-		stmt, _ := db.Prepare(insertMovie)
-		defer stmt.Close()
 
 		if _, err := stmt.Exec(
 			movieRec.adult,
@@ -100,8 +102,12 @@ func MakeDBFromCSV(dbpath, csvpath, csvFilename string) error {
 			movieRec.video,
 			movieRec.voteAverage,
 			movieRec.voteCount); err != nil {
-			return err
+			// TODO: more sophisticated error handling here would be nice
+			fmt.Println("error processing movie: csv line:", counter, ":", err.Error())
 		}
+
+	incrContinue:
+		counter++
 	}
 
 	_, err = db.Exec("COMMIT TRANSACTION;")
