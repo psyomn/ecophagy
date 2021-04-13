@@ -44,8 +44,7 @@ func Run(_ common.RunParams) common.RunReturn {
 	outputStr := string(output)
 	lines := strings.Split(outputStr, "\n")
 
-	semvers := make([]*semver.Version, len(lines))
-
+	semvers := make([]*semver.Version, 0)
 	for index := range lines {
 		if lines[index] == "" {
 			// last line might be blank; ignore
@@ -58,7 +57,7 @@ func Run(_ common.RunParams) common.RunReturn {
 			continue
 		}
 
-		semvers[index] = v
+		semvers = append(semvers, v)
 	}
 
 	sort.Sort(semver.Collection(semvers))
