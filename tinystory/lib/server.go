@@ -115,15 +115,18 @@ func (s *Server) HandleStory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseData := struct {
-		Title    string
-		Authors  []string
-		Website  string
-		Fragment StoryFragment
+		Title      string
+		Authors    []string
+		Website    string
+		Fragment   StoryFragment
+		StoryIndex int
+		NodeIndex  int
 	}{
-		Title:    s.visitor.Documents[storyIndex].Title,
-		Authors:  s.visitor.Documents[storyIndex].Authors,
-		Website:  s.visitor.Documents[storyIndex].Website,
-		Fragment: s.visitor.Documents[storyIndex].Fragments[nodeIndex],
+		Title:      s.visitor.Documents[storyIndex].Title,
+		Authors:    s.visitor.Documents[storyIndex].Authors,
+		Website:    s.visitor.Documents[storyIndex].Website,
+		Fragment:   s.visitor.Documents[storyIndex].Fragments[nodeIndex],
+		StoryIndex: storyIndex,
 	}
 
 	if err := s.storyTemplate.Execute(w, responseData); err != nil {

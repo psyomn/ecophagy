@@ -14,7 +14,7 @@
     <p> {{ .Fragment.Content }}  </p>
 
     {{ range .Fragment.Choices }}
-    <form action="/story/1/{{ .Index }}">
+    <form action="/story/{{ $.StoryIndex }}/{{ .Index }}">
       <input type="submit" value="{{ .Description }}">
     </form>
     {{ else }}
