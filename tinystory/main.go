@@ -13,12 +13,18 @@ func makeFlags(sess *tinystory.Session) {
 	flag.StringVar(&sess.Port, "port", sess.Port, "specify port to bind server")
 	flag.StringVar(&sess.Repository, "repository", sess.Repository, "specify story repository")
 	flag.StringVar(&sess.Assets, "assets", sess.Assets, "specify the assets root path")
+	flag.StringVar(&sess.ExperimentalParser, "experimental-parser", sess.ExperimentalParser, "use experimental parser")
 	flag.Parse()
 }
 
 func main() {
 	sess := tinystory.MakeDefaultSession()
 	makeFlags(sess)
+
+	if sess.ExperimentalParser != "" {
+		// TODO experimental for now
+		_, _ = tinystory.ParseTinyStoryFormat(sess.ExperimentalParser)
+	}
 
 	// TODO: there should be a less bleedy initialization here
 	docs, err := tinystory.ParseAllInDir(sess.Repository)

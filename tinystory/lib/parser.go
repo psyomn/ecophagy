@@ -1,3 +1,7 @@
+/**
+ * A very simple parser that relies on stories that are written in
+ * json
+ */
 package tinystory
 
 import (

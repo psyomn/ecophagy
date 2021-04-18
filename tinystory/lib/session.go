@@ -5,6 +5,8 @@ type Session struct {
 	Port       string
 	Repository string
 	Assets     string
+
+	ExperimentalParser string
 }
 
 func MakeDefaultSession() *Session {

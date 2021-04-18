@@ -30,3 +30,8 @@ Run `make` in the root directory. Then you can run the binary in this
 directory. You just need to pass the proper flags to the binary to
 point to a story repository, and an assets directory (with the html
 templates).
+
+# todo
+
+Since we're dealing with graphs, might be nice to have some checks to
+make sure that certain nodes are not orphaned.

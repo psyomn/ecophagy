@@ -114,6 +114,8 @@ func (s *Server) HandleStory(w http.ResponseWriter, r *http.Request) {
 		nodeIndex = maybeNodeIndex
 	}
 
+	// TODO: make a safe index check here with min(len(documents), actual)
+
 	responseData := struct {
 		Title      string
 		Authors    []string
