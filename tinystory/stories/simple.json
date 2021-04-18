@@ -1,0 +1,32 @@
+{
+	"title": "the platypus war: part CXXII",
+	"authors": ["jon doe", "jon smith", "jane doe"],
+	"website": "https://github.com/psyomn/cacophagy",
+
+	"dev_comments": "maybe we can do something better in the future, like provide an editor to create stories easier",
+
+	"story": [
+       	[0,
+		 "you wake up in a dark room. you see a platypus. what do you do?",
+		 [["choose to greet the platypus", 1],
+		  ["choose to ignore the platypus", 1],
+		  ["choose to look at the ceiling", 1]]
+		],
+
+		[1,
+         "the platypus heeds your greeting, and tells you about a terrible war between the platypii and gingerbread men\nHe asks for your help.",
+		 [["help platypus fight gingerbread men", 2],
+		  ["decline to help the platypus", 3]]
+		],
+
+		[2,
+         "you help the platypus by travelling far lands, finding where the gingerbread men infestation is, and drown their whole civilizatio in mapple syrup. the battle is won!\nThe platypus thanks you, and you go home.",
+         []
+		],
+
+        [3,
+         "you decline to help the platypus because you have better things to do. gingerbread men erupt from the ground, grab the platypus and eat it alive right in front of you. you monster.",
+         []
+        ]
+	]
+}
