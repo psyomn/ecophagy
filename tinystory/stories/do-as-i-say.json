@@ -1,0 +1,20 @@
+{
+    "title": "DO AS I SAY",
+    "authors": ["tyrant doasisayson"],
+	"website": "https://github.com/psyomn/cacophagy",
+
+    "dev_comment": "mostly used to demonstrate that cycles work",
+
+    "story": [
+        [0,
+         "DO AS I SAY",
+         [["yes", 1],
+          ["no", 0]]
+        ],
+
+        [1,
+         "I'm glad we agree",
+         []
+        ]
+    ]
+}

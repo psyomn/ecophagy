@@ -1,0 +1,40 @@
+TITLE
+The platypus war: part CXXII;
+
+AUTHORS
+jon doe;
+jon smith;
+jane doeson;
+jake andbake;
+
+
+COMMENTS
+maybe we can do something better in the future, like provide
+an editor to create stories easier. For now maybe the
+
+FRAGMENT 0
+you wake up in a dark room. you see a platypus. what do you do?
+  GOTO 1 choose to greet the platypus
+  GOTO 1 choose to ignore the platypus
+  GOTO 1 choose to look at the ceiling
+ENDFRAGMENT
+
+FRAGMENT 1
+the platypus heeds your greeting, and tells you about a terrible war
+between the platypii and gingerbread men. He asks for your help.
+  GOTO 2 help platypus fight gingerbread men
+  GOTO 3 decline to help the platypus
+ENDFRAGMENT
+
+FRAGMENT 2
+you help the platypus by travelling far lands, finding where the
+gingerbread men infestation is, and drown their whole civilizatio in
+mapple syrup. the battle is won! The platypus thanks you, and you go
+home.
+ENDFRAGMENT
+
+FRAGMENT 3
+you decline to help the platypus because you have better things to
+do. gingerbread men erupt from the ground, grab the platypus and eat
+it alive right in front of you. you monster.
+ENDFRAGMENT
