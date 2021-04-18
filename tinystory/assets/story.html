@@ -1,0 +1,28 @@
+<html>
+  <head/>
+
+  <body>
+    <h1> the platypus war: part CXXII (TODO) </h1>
+    <p><i> authors: {{ range .Authors }} &bull; {{ . }} {{else}} no authors specified {{end}} </i></p>
+    {{ if .Website }}
+    <p><a href="{{ .Website }}">{{ .Website }}</a></p>
+    {{ else }}
+    {{ end }}
+
+    <hr/>
+
+    <p> {{ .Fragment.Content }}  </p>
+
+    {{ range .Fragment.Choices }}
+    <form action="/story/1/{{ .Index }}">
+      <input type="submit" value="{{ .Description }}">
+    </form>
+    {{ else }}
+    <p> THE END </p>
+    {{ end }}
+
+    <hr/>
+    <p><a href="/">back to story directory</a></p>
+
+  </body>
+</html>

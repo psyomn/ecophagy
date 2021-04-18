@@ -6,7 +6,7 @@ import (
 	"github.com/psyomn/ecophagy/common"
 )
 
-const fixture = "../fixtures/simple.json"
+const fixture = "../stories/simple.json"
 
 func TestTinyStoryParserTitle(t *testing.T) {
 	data, err := common.FileToBytes(fixture)

@@ -8,37 +8,31 @@ import (
 	"github.com/psyomn/ecophagy/tinystory/lib"
 )
 
-type Session struct {
-	host       string
-	port       string
-	repository string
-}
-
-func MakeDefaultSession() *Session {
-	return &Session{
-		host:       "127.0.0.1",
-		port:       "9090",
-		repository: "./stories",
-		assets:     "./assets",
-	}
-}
-
-func makeFlags(sess *Session) {
-	flag.StringVar(&sess.host, "host", sess.host, "specify host to bind server")
-	flag.StringVar(&sess.port, "port", sess.port, "specify port to bind server")
-	flag.StringVar(&sess.repository, "repository", sess.repository, "specify story repository")
+func makeFlags(sess *tinystory.Session) {
+	flag.StringVar(&sess.Host, "host", sess.Host, "specify host to bind server")
+	flag.StringVar(&sess.Port, "port", sess.Port, "specify port to bind server")
+	flag.StringVar(&sess.Repository, "repository", sess.Repository, "specify story repository")
+	flag.StringVar(&sess.Assets, "assets", sess.Assets, "specify the assets root path")
 	flag.Parse()
 }
 
 func main() {
-	sess := MakeDefaultSession()
+	sess := tinystory.MakeDefaultSession()
 	makeFlags(sess)
 
-	docs, err := tinystory.ParseAllInDir(sess.repository)
+	// TODO: there should be a less bleedy initialization here
+	docs, err := tinystory.ParseAllInDir(sess.Repository)
 	if err != nil {
 		fmt.Printf("error parsing stories: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Println(docs)
+	server, err := tinystory.ServerNew(sess, docs)
+	if err != nil {
+		fmt.Println("could not start server:", err)
+	}
+
+	if err := server.Start(); err != nil {
+		fmt.Println(err)
+	}
 }

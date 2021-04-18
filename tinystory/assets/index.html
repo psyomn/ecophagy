@@ -2,6 +2,13 @@
 <head/>
 
 <body>
+  <h1> Welcome! </h1>
+
+  <p> List of stories: </p>
+  <ul>
+    {{range .Items}}<li> [<a href="/story/{{ .Index  }}/0/">read</a>] {{ .Title }} </li>{{else}}<li> no stories </li>{{end}}
+  </ul>
+
 </body>
 
 </html>

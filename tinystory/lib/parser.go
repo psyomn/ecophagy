@@ -3,14 +3,15 @@ package tinystory
 import (
 	"encoding/json"
 	"io/fs"
+	"path"
 	"path/filepath"
 
 	"github.com/psyomn/ecophagy/common"
 )
 
 type Choice struct {
-	Description string `json:"description"`
-	Index       int    `json:"index"`
+	Description string
+	Index       int
 }
 
 func (s *Choice) UnmarshalJSON(data []byte) error {
@@ -47,16 +48,16 @@ func Parse(bjson []byte) (*Document, error) {
 	return doc, nil
 }
 
-func ParseAllInDir(path string) ([]Document, error) {
+func ParseAllInDir(dirpath string) ([]Document, error) {
 	docs := make([]Document, 0, 256)
 
-	err := filepath.Walk(path, func(currpath string, info fs.FileInfo, err error) error {
+	err := filepath.Walk(dirpath, func(currpath string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if path.Ext(currpath) != ".json" {
-
+			return nil
 		}
 
 		if info.IsDir() {
