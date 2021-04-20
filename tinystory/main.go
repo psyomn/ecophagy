@@ -23,7 +23,15 @@ func main() {
 
 	if sess.ExperimentalParser != "" {
 		// TODO experimental for now
-		_, _ = tinystory.ParseTinyStoryFormat(sess.ExperimentalParser)
+		doc, err := tinystory.ParseTinyStoryFormatFile(sess.ExperimentalParser)
+		if err != nil {
+			fmt.Println("error parsing tinystory format:", err)
+			return
+		}
+
+		fmt.Println(doc)
+
+		return
 	}
 
 	// TODO: there should be a less bleedy initialization here
