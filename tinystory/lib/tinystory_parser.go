@@ -16,13 +16,22 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"strconv"
+	"strings"
+	// "strconv"
 )
 
 type TokenTypeEnum uint64
 
 const (
 	TokenKeyword TokenTypeEnum = iota
+	TokenKeywordTitle
+	TokenKeywordComment
+	TokenKeywordAuthors
+	TokenKeywordEndAuthors
+	TokenKeywordFragment
+	TokenKeywordEndFragment
+	TokenKeywordGoto
+
 	TokenWord
 	TokenNewline
 	TokenNumber
@@ -31,19 +40,11 @@ const (
 	TokenError
 )
 
-var keywords = []string{
-	"TITLE",
-	"COMMENTS",
-	"AUTHORS",
-	"FRAGMENT",
-	"ENDFRAGMENT",
-	"GOTO",
-}
-
 var skip = []byte{
 	' ',
 	'\t',
 	'\n',
+	';',
 }
 
 var (
@@ -62,10 +63,166 @@ type Token struct {
 	LineNumber uint64
 }
 
+type Parser struct {
+	tokens []Token
+	cursor int
+	doc    *Document
+}
+
+func NewParser(tokens []Token, doc *Document) *Parser {
+	return &Parser{
+		tokens: tokens,
+		cursor: 0,
+		doc:    doc,
+	}
+}
+
+func (s *Parser) Current() *Token {
+	return &s.tokens[s.cursor]
+}
+
+func (s *Parser) Execute() {
+	for s.cursor < len(s.tokens) {
+		/* top level keywords go here */
+		switch s.Current().Type {
+		case TokenKeywordTitle:
+			s.ParseTitle()
+		case TokenKeywordAuthors:
+			s.ParseAuthors()
+		case TokenKeywordComment:
+			s.ParseComment()
+		case TokenKeywordFragment:
+			fallthrough
+		case TokenError:
+			fallthrough
+		case TokenNewline:
+			// in the case of stray newlines, we don't care and we
+			// skip to the next token
+			s.cursor++
+		default:
+			return
+		}
+	}
+}
+
+func (s *Parser) CheckEndStatement() bool {
+	// this is extraneous and I should recheck the grammar
+	if s.Current().Type != TokenSemicolon {
+		panic(
+			fmt.Sprintf(
+				"line %d: expected semicolon but got: %s",
+				s.Current().LineNumber,
+				s.Current().Value,
+			),
+		)
+	}
+
+	return true
+}
+
+func (s *Parser) ParseTitle() {
+	// cursor on "TITLE" move
+	s.cursor++
+
+	s.CheckEndStatement()
+	s.cursor++
+
+	s.SkipNewlines()
+
+	vals := s.TakeValuesUntilToken(TokenSemicolon)
+	s.CheckEndStatement()
+	s.cursor++
+
+	s.doc.Title = strings.Join(vals, " ")
+}
+
+func (s *Parser) ParseAuthors() {
+	// cursor on "AUTHORS" move
+	s.cursor++
+
+	s.CheckEndStatement()
+	s.cursor++
+
+	s.SkipNewlines()
+
+	for s.Current().Type != TokenKeywordEndAuthors {
+		tks := s.TakeValuesUntilToken(TokenSemicolon)
+
+		s.CheckEndStatement()
+		s.cursor++
+
+		s.SkipNewlines()
+
+		s.doc.Authors = append(s.doc.Authors, strings.Join(tks, " "))
+	}
+
+	// Skip over ENDAUTHORS
+	s.cursor++
+
+	// Make sure we're ending the fragment here
+	s.CheckEndStatement()
+	s.cursor++
+}
+
+func (s *Parser) ParseComment() {
+	// move over COMMENT keyword
+	s.cursor++
+
+	s.CheckEndStatement()
+	s.cursor++
+
+	s.SkipNewlines()
+
+	tks := s.TakeValuesUntilToken(TokenSemicolon)
+	s.doc.Comment = strings.Join(tks, " ")
+
+	s.CheckEndStatement()
+	s.cursor++
+}
+
+func (s *Parser) TakeValuesUntilToken(toktype TokenTypeEnum) []string {
+	var tks []string
+
+	maxIndex := len(s.tokens)
+	for ; s.Current().Type != toktype && s.cursor < maxIndex; s.cursor++ {
+		tks = append(tks, s.Current().Value)
+	}
+
+	return tks
+
+}
+
+func (s *Parser) SkipNewlines() {
+	for s.cursor < len(s.tokens) && s.Current().Type == TokenNewline {
+		s.cursor++
+	}
+}
+
+func (s *Parser) ParseStringStatement() string {
+	// this will parse tokens into a string. The cursor will be place
+	// after the semicolon token
+	vals := s.TakeValuesUntilToken(TokenSemicolon)
+	s.cursor++
+
+	return strings.Join(vals, " ")
+}
+
 func TokenTypeEnumString(t TokenTypeEnum) string {
 	switch t {
 	case TokenKeyword:
-		return "KEYWORD"
+		return "KW"
+	case TokenKeywordTitle:
+		return "KW_TITLE"
+	case TokenKeywordComment:
+		return "KW_COMMENT"
+	case TokenKeywordAuthors:
+		return "KW_AUTHORS"
+	case TokenKeywordFragment:
+		return "KW_FRAGMENT"
+	case TokenKeywordEndFragment:
+		return "KW_ENDFRAGMENT"
+	case TokenKeywordGoto:
+		return "KW_GOTO"
 	case TokenWord:
 		return "WORD"
 	case TokenNewline:
@@ -90,16 +247,27 @@ func (s Token) String() string {
 }
 
 func classifyToken(value string) TokenTypeEnum {
-	if stringArrIncludes(value, keywords) {
-		return TokenKeyword
-	}
-
-	if isNumReg.Match([]byte(value)) {
-		return TokenNumber
+	switch value {
+	case "TITLE":
+		return TokenKeywordTitle
+	case "AUTHORS":
+		return TokenKeywordAuthors
+	case "ENDAUTHORS":
+		return TokenKeywordEndAuthors
+	case "COMMENT":
+		return TokenKeywordComment
+	case "FRAGMENT":
+		return TokenKeywordFragment
+	case "ENDFRAGMENT":
+		return TokenKeywordEndFragment
 	}
 
 	if value == "\n" {
 		return TokenNewline
+	}
+
+	if isNumReg.Match([]byte(value)) {
+		return TokenNumber
 	}
 
 	if isAlphaNumReg.Match([]byte(value)) {
@@ -109,13 +277,13 @@ func classifyToken(value string) TokenTypeEnum {
 	return TokenError
 }
 
-func TokenFromString(value string) (*Token, error) {
+func TokenFromString(value string) *Token {
 	token := &Token{
 		Type:       classifyToken(value),
 		Value:      value,
 		LineNumber: 0,
 	}
-	return token, nil
+	return token
 }
 
 func stringArrIncludes(e string, arr []string) bool {
@@ -141,6 +309,7 @@ func tokenize(reader io.Reader) []Token {
 	breader := bufio.NewReader(reader)
 	buffer := make([]byte, 0, 1024)
 	tokens := make([]Token, 0, 1024)
+	var numLines uint64 = 1
 
 	for {
 		_, err := breader.Read(cursor)
@@ -161,11 +330,23 @@ func tokenize(reader io.Reader) []Token {
 			newToken := Token{
 				Type:       TokenNewline,
 				Value:      "\n",
-				LineNumber: 0,
+				LineNumber: numLines,
+			}
+
+			numLines++
+
+			tokens = append(tokens, newToken)
+			continue
+		}
+
+		if cursor[0] == ';' {
+			newToken := Token{
+				Type:       TokenSemicolon,
+				Value:      ";",
+				LineNumber: numLines,
 			}
 
 			tokens = append(tokens, newToken)
-
 			continue
 		}
 
@@ -177,7 +358,7 @@ func tokenize(reader io.Reader) []Token {
 			strToken := string(buffer)
 			buffer = nil
 
-			token, err := TokenFromString(strToken)
+			token := TokenFromString(strToken)
 			if err != nil {
 				// TODO: dont panic
 				panic(err)
@@ -192,99 +373,6 @@ func tokenize(reader io.Reader) []Token {
 	return tokens
 }
 
-func parseKeyword(tokens []Token, cursor *int, doc *Document) {
-	maxIndex := len(tokens) - 1
-
-	switch tokens[*cursor].Value {
-	case "TITLE":
-		// skip title
-		*cursor++
-		fmt.Println("parse title")
-
-		for ; tokens[*cursor].Type != TokenKeyword && *cursor < maxIndex; *cursor++ {
-			if tokens[*cursor].Type != TokenNewline {
-				doc.Title += tokens[*cursor].Value + " "
-			}
-		}
-
-	case "AUTHORS":
-		// skip authors
-		*cursor++
-		fmt.Println("parse authors")
-
-		currAuthor := ""
-		for ; tokens[*cursor].Type != TokenKeyword && *cursor < maxIndex; *cursor++ {
-			if tokens[*cursor].Type != TokenNewline {
-				currAuthor += tokens[*cursor].Value + " "
-				continue
-			}
-
-			doc.Authors = append(doc.Authors, currAuthor)
-			currAuthor = ""
-		}
-
-	case "COMMENTS":
-		// TODO
-	case "FRAGMENT":
-		*cursor++
-
-		frag := StoryFragment{}
-
-		fmt.Println("parse fragment")
-		if tokens[*cursor].Type != TokenNumber {
-			// error case here -- fragment should be followed by a
-			// (non negative) number
-		}
-
-		{ /* parse inded */
-			// no error check since the regex makes sure the input is
-			// a number
-			num, _ := strconv.Atoi(tokens[*cursor].Value)
-
-			// not the best, but we can fix this in a rewrite, when we
-			// don't care about json
-			frag.Index = num
-		}
-
-		// skip extraneous newlines
-		for ; tokens[*cursor].Type != TokenNewline && *cursor < maxIndex; *cursor++ {
-		}
-
-		for ; tokens[*cursor].Type != TokenKeyword && *cursor < maxIndex; *cursor++ {
-			frag.Content += tokens[*cursor].Value + " "
-		}
-
-		// TODO: parse GOTO
-
-		fmt.Println("end parse fragment")
-		if tokens[*cursor].Value == "ENDFRAGMENT" {
-			// extra check here
-			*cursor++
-		}
-
-		doc.Fragments = append(doc.Fragments, frag)
-	}
-}
-
-func parseTokens(tokens []Token) (*Document, error) {
-	var doc Document
-
-	for cursor := 0; cursor < len(tokens); {
-		/* NOTE: parsing functions must be responsible on updating the
-		   cursor position */
-		fmt.Println(tokens[cursor])
-		switch tokens[cursor].Type {
-		case TokenKeyword:
-			parseKeyword(tokens, &cursor, &doc)
-		case TokenNewline:
-			cursor++
-		}
-
-	}
-
-	return &doc, nil
-}
-
 func ParseTinyStoryFormatFile(path string) (*Document, error) {
 	fs, err := os.Open(path)
 	if err != nil {
@@ -297,16 +385,19 @@ func ParseTinyStoryFormatFile(path string) (*Document, error) {
 func ParseTinystoryFormat(reader io.ReadCloser) (*Document, error) {
 	defer reader.Close()
 
-	var doc *Document
+	doc := &Document{}
 	tokens := tokenize(reader)
+	parser := NewParser(tokens, doc)
+
+	fmt.Println("===== TOKENIZE =====")
 	fmt.Println(tokens)
+	fmt.Println("===== PARSE =====")
+	parser.Execute()
 
-	doc, err := parseTokens(tokens)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(*doc)
+	// doc, err := parseTokens(tokens)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return doc, nil
 }
