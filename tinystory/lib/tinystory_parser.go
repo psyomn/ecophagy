@@ -16,8 +16,8 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
-	// "strconv"
 )
 
 type TokenTypeEnum uint64
@@ -92,7 +92,7 @@ func (s *Parser) Execute() {
 		case TokenKeywordComment:
 			s.ParseComment()
 		case TokenKeywordFragment:
-			fallthrough
+			s.ParseFragment()
 		case TokenError:
 			fallthrough
 		case TokenNewline:
@@ -100,6 +100,7 @@ func (s *Parser) Execute() {
 			// skip to the next token
 			s.cursor++
 		default:
+			fmt.Println(s.Current())
 			return
 		}
 	}
@@ -180,6 +181,84 @@ func (s *Parser) ParseComment() {
 	s.cursor++
 }
 
+func (s *Parser) ParseFragment() {
+	// move over the FRAGMENT keyword
+	s.cursor++
+
+	fragIndex := 0
+	{
+		value, _ := strconv.Atoi(s.Current().Value)
+		fragIndex = value
+	}
+
+	s.cursor++
+	s.CheckEndStatement()
+
+	s.cursor++
+	vals := s.TakeValuesUntilToken(TokenSemicolon)
+
+	s.CheckEndStatement()
+	s.cursor++
+
+	s.SkipNewlines()
+
+	choices := s.ParseChoices()
+
+	if s.Current().Type != TokenKeywordEndFragment {
+		panic("expected ENDFRAGMENT got " + s.Current().String())
+	}
+
+	s.cursor++
+	s.CheckEndStatement()
+	s.cursor++
+
+	s.doc.Fragments = append(s.doc.Fragments, StoryFragment{
+		Index:   fragIndex,
+		Content: strings.Join(vals, " "),
+		Choices: choices,
+	})
+}
+
+func (s *Parser) ParseChoices() []Choice {
+	var choices []Choice
+
+	fmt.Println("====", s.Current())
+
+	for s.cursor < len(s.tokens) && s.Current().Type != TokenKeywordEndFragment {
+		if s.Current().Type != TokenKeywordGoto {
+			panic("expected GOTO keyword, got: " + s.Current().String())
+		}
+		s.cursor++
+
+		if s.Current().Type != TokenNumber {
+			panic("expected index/integer, got: " + s.Current().String())
+		}
+
+		gIndex := 0
+		{
+			// regex makes sure that it's indeed a number, don't need
+			// to check for errors
+			val, _ := strconv.Atoi(s.Current().Value)
+			gIndex = val
+		}
+		s.cursor++
+
+		desc := strings.Join(s.TakeValuesUntilToken(TokenSemicolon), " ")
+
+		choices = append(choices, Choice{
+			Index:       gIndex,
+			Description: desc,
+		})
+
+		s.CheckEndStatement()
+		s.cursor++
+
+		s.SkipNewlines()
+	}
+
+	return choices
+}
+
 func (s *Parser) TakeValuesUntilToken(toktype TokenTypeEnum) []string {
 	var tks []string
 
@@ -189,7 +268,6 @@ func (s *Parser) TakeValuesUntilToken(toktype TokenTypeEnum) []string {
 	}
 
 	return tks
-
 }
 
 func (s *Parser) SkipNewlines() {
@@ -260,6 +338,8 @@ func classifyToken(value string) TokenTypeEnum {
 		return TokenKeywordFragment
 	case "ENDFRAGMENT":
 		return TokenKeywordEndFragment
+	case "GOTO":
+		return TokenKeywordGoto
 	}
 
 	if value == "\n" {

@@ -57,7 +57,9 @@ func (s Document) String() string {
 Comment: %s
 
 Authors: %v
-`, s.Title, s.Comment, s.Authors)
+
+Story Fragments: %s
+`, s.Title, s.Comment, s.Authors, s.Fragments)
 }
 
 func Parse(bjson []byte) (*Document, error) {
