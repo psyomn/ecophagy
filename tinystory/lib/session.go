@@ -1,12 +1,11 @@
 package tinystory
 
 type Session struct {
-	Host       string
-	Port       string
-	Repository string
-	Assets     string
-
-	ExperimentalParser string
+	Host               string
+	Port               string
+	Repository         string
+	Assets             string
+	ExperimentalParser bool
 }
 
 func MakeDefaultSession() *Session {
