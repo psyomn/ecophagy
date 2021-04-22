@@ -84,6 +84,7 @@ func (s *Parser) Current() *Token {
 func (s *Parser) Execute() {
 	for s.cursor < len(s.tokens) {
 		/* top level keywords go here */
+		// nolint
 		switch s.Current().Type {
 		case TokenKeywordTitle:
 			s.ParseTitle()
@@ -295,6 +296,8 @@ func TokenTypeEnumString(t TokenTypeEnum) string {
 		return "KW_COMMENT"
 	case TokenKeywordAuthors:
 		return "KW_AUTHORS"
+	case TokenKeywordEndAuthors:
+		return "KW_ENDAUTHORS"
 	case TokenKeywordFragment:
 		return "KW_FRAGMENT"
 	case TokenKeywordEndFragment:
@@ -364,15 +367,6 @@ func TokenFromString(value string) *Token {
 		LineNumber: 0,
 	}
 	return token
-}
-
-func stringArrIncludes(e string, arr []string) bool {
-	for index := range arr {
-		if arr[index] == e {
-			return true
-		}
-	}
-	return false
 }
 
 func byteArrIncludes(b byte, arr []byte) bool {
