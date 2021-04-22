@@ -115,3 +115,40 @@ func ParseAllInDir(dirpath string) ([]Document, error) {
 
 	return docs, nil
 }
+
+func ParseAllInDirExt(dirpath string) ([]Document, error) {
+	docs := make([]Document, 0, 256)
+
+	err := filepath.Walk(dirpath, func(currpath string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if path.Ext(currpath) != ".tinystory" {
+			return nil
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+
+		document, err := ParseTinyStoryFormatFile(currpath)
+		if err != nil {
+			return err
+		}
+
+		docs = append(docs, *document)
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return docs, nil
+}

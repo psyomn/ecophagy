@@ -1,19 +1,20 @@
-TITLE
-The smallest story ever
+TITLE;
+The smallest story ever;
 
-AUTHORS
-me
+AUTHORS;
+me;
+ENDAUTHORS;
 
-FRAGMENT 0
+FRAGMENT 0;
 Once upon a time there was a world and it was wonderful. You can't
 imagine how wonderful it was. Therefore you will remain wonderfully
-ignorant.
-ENDFRAGMENT
+ignorant.;
+ENDFRAGMENT;
 
-FRAGMENT 1
-We can't reach this area at the moment.
-ENDFRAGMENT
+FRAGMENT 1;
+We can't reach this area at the moment.;
+ENDFRAGMENT;
 
-FRAGMENT 2
-WOWOWO LOOK AT THIS
-ENDFRAGMENT
+FRAGMENT 2;
+WOWOWO LOOK AT THIS;
+ENDFRAGMENT;
