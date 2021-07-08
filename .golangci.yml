@@ -19,7 +19,6 @@ linters:
     - errcheck
     - errorlint
     - exhaustive
-    - exportloopref
     - gocritic
     - goheader
     - golint
@@ -34,7 +33,7 @@ linters:
     - noctx
     - prealloc
     - rowserrcheck
-    - scopelint
+    - exportloopref
     - sqlclosecheck
     - staticcheck
     - structcheck
@@ -69,7 +68,7 @@ linters:
     - goprintffuncname
     # - ifshort
     - importas
-    - interfacer
+    # - interfacer
     # - maligned # TODO: should enable this
     - nakedret
     - nestif
@@ -89,6 +88,7 @@ linters:
     # - wsl
 
   disable:
+    - scopelint
   disable-all: false
   presets:
     - bugs
