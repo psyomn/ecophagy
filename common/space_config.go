@@ -23,7 +23,7 @@ func ReadSpaceConfig(filename string) (map[string]string, error) {
 		return nil, err
 	}
 
-	lines := bytes.Split(bs, []byte{byte(KNewline)})
+	lines := bytes.Split(bs, []byte{byte(Newline)})
 
 	for i := range lines {
 		kv := bytes.Split(lines[i], []byte{' '})

@@ -19,9 +19,8 @@ import (
 )
 
 const (
-	// TODO get rid of this
-	KNewline = '\n'
-	orgName  = "ecophagy"
+	Newline = '\n'
+	orgName = "ecophagy"
 )
 
 // DownloadIfNotExist will check for a filename, and if it doesn't

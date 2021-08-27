@@ -95,7 +95,7 @@ first line is your rating. you can leave any comments below.
 		panic(err)
 	}
 
-	lines := strings.Split(string(maybeContents), string(common.KNewline))
+	lines := strings.Split(string(maybeContents), string(common.Newline))
 
 	if len(lines) < 2 {
 		panic("movie review not in proper format")
@@ -107,7 +107,7 @@ first line is your rating. you can leave any comments below.
 	}
 
 	ri.score = score
-	ri.comment = strings.Join(lines[1:len(lines)-1], string(common.KNewline))
+	ri.comment = strings.Join(lines[1:len(lines)-1], string(common.Newline))
 }
 
 // stdin input mode
