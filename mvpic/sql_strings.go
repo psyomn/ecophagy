@@ -70,7 +70,7 @@ INSERT INTO ratings(movie_id, comment, score) VALUES (?, ?, ?)
 
 	createMovieNameIndex = `CREATE INDEX IF NOT EXISTS movie_original_title_index ON movies(original_title);`
 
-	searchMovieLike = `SELECT * FROM movies WHERE title like ?;`
+	searchMovieLike = `SELECT * FROM movies WHERE title LIKE ? ORDER BY release_date ASC;`
 
 	descMovie = `SELECT * FROM movies WHERE id = ?`
 )
