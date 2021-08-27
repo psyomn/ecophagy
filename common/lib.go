@@ -2,10 +2,12 @@ package common
 
 import (
 	"bufio"
-	// TODO -- will revisit and fix this to use something else but
-	//   don't have the time right now
-	// nolint
+	"context"
+	"time"
+
+	// nolint:gosec // see below usage
 	"crypto/md5"
+
 	"errors"
 	"fmt"
 	"io"
@@ -40,17 +42,23 @@ func DownloadFile(path, url string) error {
 	}
 	defer out.Close()
 
-	// TODO: will have to recheck whether we really want something as
-	// drastic as disabling here
-	// nolint
-	resp, err := http.Get(url)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return err
 	}
 
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	_, err = io.Copy(out, resp.Body)
+
 	return err
 }
 
@@ -103,7 +111,7 @@ func PathExists(path string) bool {
 
 // FileToMd5Sum will calculate the hash of a particular file
 // contents. The intended use is for quick checks rather than
-// secure.
+// secure. Might need to microbenchmark sha256 and verify.
 func FileToMd5Sum(path string) (string, error) {
 	fh, err := os.Open(path)
 	if err != nil {
@@ -111,8 +119,7 @@ func FileToMd5Sum(path string) (string, error) {
 	}
 	defer fh.Close()
 
-	// TODO -- will come back and fix this
-	// nolint
+	// nolint:gosec // security not important; speed is
 	hash := md5.New()
 	if _, err := io.Copy(hash, fh); err != nil {
 		return "", err
