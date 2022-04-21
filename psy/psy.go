@@ -1,7 +1,7 @@
 /*
 more experimental than anything.
 
-Copyright 2019 Simon Symeonidis (psyomn)
+Copyright 2019-2022 Simon Symeonidis (psyomn)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	"github.com/psyomn/ecophagy/psy/barf"
 	"github.com/psyomn/ecophagy/psy/common"
+	"github.com/psyomn/ecophagy/psy/filebucket"
 	"github.com/psyomn/ecophagy/psy/gh"
 	"github.com/psyomn/ecophagy/psy/git"
 	"github.com/psyomn/ecophagy/psy/memo"
@@ -41,6 +42,7 @@ type command struct {
 func makeCommands() []command {
 	return []command{
 		{"barf", barf.Run, "run code barfer"},
+		{"filebucket", filebucket.Run, "bucket duplicate files"},
 		{"memo", memo.Run, "description on files in the system"},
 		{"upld", uploader.Run, "run the uploader tool"},
 		{"mock", mock.Run, "run tcp/udp mocker"},
