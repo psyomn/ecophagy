@@ -25,9 +25,78 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 
 	"github.com/psyomn/ecophagy/psy/common"
 )
+
+type pathWithHash struct {
+	path string
+	hash string
+}
+
+type workerPool struct {
+	done       bool
+	numWorkers int
+	workerWg   sync.WaitGroup
+	bufferSize uint
+	input      chan pathWithHash
+	output     chan pathWithHash
+}
+
+func workerPoolNew() *workerPool {
+	const bufsz = 500
+	return &workerPool{
+		done:       false,
+		numWorkers: runtime.GOMAXPROCS(0),
+		workerWg:   sync.WaitGroup{},
+		bufferSize: bufsz,
+		input:      make(chan pathWithHash, bufsz),
+		output:     make(chan pathWithHash, bufsz),
+	}
+}
+
+func (s *workerPool) Run() {
+	if s.done {
+		panic("create a new workerpool instead of reusing old")
+	}
+
+	workerFn := func(wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		for {
+			el, more := <-s.input
+			if !more {
+				return
+			}
+
+			hash, _ := hashFile(el.path)
+			el.hash = hash
+			s.output <- el
+		}
+	}
+
+	for i := 0; i < s.numWorkers; i++ {
+		s.workerWg.Add(1)
+		go workerFn(&s.workerWg)
+	}
+}
+
+func (s *workerPool) Finish() {
+	s.done = true
+
+	close(s.input)
+	s.workerWg.Wait()
+
+	close(s.output)
+}
+
+func (s *workerPool) Process(entry *pathWithHash) {
+	// PERF: passing pointers through channels might be slightly more
+	// performant here.
+	s.input <- *entry
+}
 
 type session struct {
 	dirPath string
@@ -50,6 +119,7 @@ func hashFile(path string) (string, error) {
 		return "", err
 	}
 
+	// PERF: returning actual byte arrays here might be overall better
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
@@ -60,37 +130,59 @@ func listOffensiveTxt(bucket fileBucket) {
 		if len(v) > 1 {
 			fmt.Println("# === bucket ", k, "=======")
 			for _, el := range v {
-				fmt.Println("# ", el)
+				fmt.Printf("# \"%s\"\n", el)
 			}
 		}
 	}
 }
 
-func WalkAndBucket(path string) fileBucket {
+func walkAndBucket(path string) fileBucket {
 	bucket := make(fileBucket)
 
-	filepath.Walk(path, func(currentFile string, info fs.FileInfo, err error) error {
+	workpl := workerPoolNew()
+	workpl.Run()
+
+	var hashWg sync.WaitGroup
+	hashWg.Add(1)
+	go func(hw *sync.WaitGroup) {
+		defer hw.Done()
+		for {
+			fhash, more := <-workpl.output
+
+			if !more {
+				return
+			}
+
+			hash := fhash.hash
+			currentFile := fhash.path
+			bucket[hash] = append(bucket[hash], currentFile)
+		}
+	}(&hashWg)
+
+	// TODO: WalkDir might be more efficient
+	err := filepath.Walk(path, func(currentFile string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 
-		hash, _ := hashFile(currentFile)
-
-		if _, ok := bucket[hash]; ok {
-			bucket[hash] = append(bucket[hash], currentFile)
-		} else {
-			bucket[hash] = []string{currentFile}
-		}
+		workpl.Process(&pathWithHash{currentFile, ""})
 
 		return nil
 	})
+	if err != nil {
+		fmt.Printf("%#v\n", err)
+	}
+
+	// signal we're done -- this closes the channel, and should end the
+	// goroutine above
+	workpl.Finish()
+
+	hashWg.Wait()
 
 	return bucket
 }
 
 func Run(args common.RunParams) common.RunReturn {
-	fmt.Println("compare dirs")
-
 	sess := session{}
 
 	cmpCmd := flag.NewFlagSet("compare-dirs", flag.ExitOnError)
@@ -104,7 +196,7 @@ func Run(args common.RunParams) common.RunReturn {
 		goto printUsageAndExit
 	}
 
-	listOffensiveTxt(WalkAndBucket(sess.dirPath))
+	listOffensiveTxt(walkAndBucket(sess.dirPath))
 
 	return nil
 
