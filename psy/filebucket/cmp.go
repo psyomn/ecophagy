@@ -159,18 +159,36 @@ func walkAndBucket(path string) fileBucket {
 		}
 	}(&hashWg)
 
-	// TODO: WalkDir might be more efficient
-	err := filepath.Walk(path, func(currentFile string, info fs.FileInfo, err error) error {
+	fszMap := make(map[int64][]string)
+
+	err := filepath.WalkDir(path, func(currentFile string, info fs.DirEntry, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 
-		workpl.Process(&pathWithHash{currentFile, ""})
+		maybeFsz, infoErr := info.Info()
+		if infoErr != nil {
+			fmt.Fprintf(os.Stderr, "err: could not read: %v\n", infoErr)
+			return nil
+		}
+
+		fsz := maybeFsz.Size()
+		fszMap[fsz] = append(fszMap[fsz], currentFile)
 
 		return nil
 	})
 	if err != nil {
 		fmt.Printf("%#v\n", err)
+	}
+
+	for _, v := range fszMap {
+		if len(v) < 2 {
+			continue
+		}
+
+		for _, fileName := range v {
+			workpl.Process(&pathWithHash{fileName, ""})
+		}
 	}
 
 	// signal we're done -- this closes the channel, and should end the
