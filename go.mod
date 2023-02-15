@@ -1,6 +1,6 @@
 module github.com/psyomn/ecophagy
 
-go 1.16
+go 1.20
 
 require (
 	github.com/Masterminds/semver v1.5.0
