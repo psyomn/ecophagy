@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -33,7 +34,7 @@ const (
 <h1> Your possible (local network) IPs </h1>
 <p> {{.IPStr}} </p>
 <form enctype="multipart/form-data" action="upload" method="post">
-    <input type="file" name="uploadfile" />
+    <input type="file" name="uploadfile" multiple/>
     <input type="submit" value="upload" />
 </form>
 </body>
@@ -57,6 +58,7 @@ func Run(_ common.RunParams) common.RunReturn {
 		fmt.Println(" ", ip.To4().String())
 	}
 
+	http.HandleFunc("/", upload)
 	http.HandleFunc("/upload", upload)
 	log.Fatal(http.ListenAndServe(port, nil))
 
@@ -116,29 +118,38 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, handler, err := r.FormFile("uploadfile")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer file.Close()
+	writeFile := func(fh *multipart.FileHeader) error {
+		f, err := fh.Open()
+		if err != nil {
+			return err
+		}
+		defer f.Close()
 
-	uploadsPath := filepath.Join(uploadsDir, handler.Filename)
+		uploadsPath := filepath.Join(uploadsDir, fh.Filename)
+		out, err := os.OpenFile(uploadsPath, os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return err
+		}
+		defer out.Close()
 
-	f, err := os.OpenFile(
-		uploadsPath,
-		os.O_WRONLY|os.O_CREATE,
-		0666)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer f.Close()
-
-	if _, err := io.Copy(f, file); err != nil {
-		log.Println("problem uploading file:", err)
-		return
+		_, err = io.Copy(out, f)
+		return err
 	}
 
-	log.Println("uploaded file: ", handler.Filename)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("working...\n"))
+
+	for k, files := range r.MultipartForm.File {
+		for _, fileHeader := range files {
+			err := writeFile(fileHeader)
+			if err != nil {
+				log.Println("error uploading file of", k, fileHeader.Filename)
+				continue
+			}
+
+			log.Println("uploaded:", fileHeader.Filename)
+			_, _ = w.Write([]byte(fmt.Sprintf("uploaded: %s \n", fileHeader.Filename)))
+		}
+	}
+	_, _ = w.Write([]byte("done!\n"))
 }
