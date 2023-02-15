@@ -13,7 +13,6 @@ linters:
     # enabled by default
     - asciicheck
     - bodyclose
-    - deadcode
     - dupl
     - durationcheck
     - errcheck
@@ -21,7 +20,6 @@ linters:
     - exhaustive
     - gocritic
     - goheader
-    - golint
     - gosec
     - gosimple
     - govet
@@ -36,11 +34,9 @@ linters:
     - exportloopref
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - typecheck
     - unparam
     - unused
-    - varcheck
 
     # disabled by default
     # - cyclop
@@ -89,8 +85,13 @@ linters:
 
   disable:
     - scopelint
+    - golint # deprecated
   disable-all: false
   presets:
     - bugs
     - unused
   fast: false
+
+linters-settings:
+  gofmt:
+    simplify: true
