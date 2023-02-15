@@ -9,6 +9,17 @@ test:
 lint:
 	golangci-lint run
 
+GOLANGCI_LINT_VERSION=v1.51.1
+linter-install:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+
+linter-releases:
+	curl -s https://api.github.com/repos/golangci/golangci-lint/releases | jq -r '.[] | .tag_name,.body' | less
+
+GOLANG_DELVE=latest
+delve-install:
+	go install github.com/go-delve/delve/cmd/dlv@$(GOLANG_DELVE)
+
 artifacts: artifacts-linux-x64 artifacts-windows-x64 # artifacts-arm-64
 
 artifacts-linux-x64:
