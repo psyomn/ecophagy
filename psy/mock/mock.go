@@ -1,7 +1,7 @@
 /*
 Package mock will mock tcp/udp endpoints
 
-Copyright 2020 Simon Symeonidis (psyomn)
+Copyright 2020-2022 Simon Symeonidis (psyomn)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
