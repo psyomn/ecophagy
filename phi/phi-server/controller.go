@@ -18,7 +18,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -213,7 +213,7 @@ func (s *controller) handleUpload(w http.ResponseWriter, r *http.Request) {
 	filename := uriParts[1]
 	timestamp := uriParts[2]
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		respondWithError(w, ErrBadBody)
 		return
@@ -324,7 +324,7 @@ fetchFile:
 		}
 		defer fh.Close()
 
-		bytes, err := ioutil.ReadAll(fh)
+		bytes, err := io.ReadAll(fh)
 		if err != nil {
 			log.Println(err)
 			return

@@ -22,13 +22,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/psyomn/ecophagy/cynic/lib"
+	cynic "github.com/psyomn/ecophagy/cynic/lib"
 )
 
 var (
@@ -109,7 +109,7 @@ func simpleGet(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	bytesResp, err := ioutil.ReadAll(resp.Body)
+	bytesResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

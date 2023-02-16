@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -39,7 +38,7 @@ func unapplyKey(data []byte, key byte) []byte {
 }
 
 func binaryToText(path string, key byte) (string, error) {
-	bin, err := ioutil.ReadFile(path)
+	bin, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +57,7 @@ func binaryToText(path string, key byte) (string, error) {
 }
 
 func textToBinary(path string) ([]byte, error) {
-	bin, err := ioutil.ReadFile(path)
+	bin, err := os.ReadFile(path)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -130,7 +129,7 @@ func main() {
 
 		encBin := unapplyKey(bin, key)
 
-		err = ioutil.WriteFile(replaceExt(file, ".bin"), encBin, 0600)
+		err = os.WriteFile(replaceExt(file, ".bin"), encBin, 0600)
 		panicIf(err)
 	}
 
@@ -141,7 +140,7 @@ func main() {
 		str, err := binaryToText(file, key)
 		panicIf(err)
 
-		err = ioutil.WriteFile(replaceExt(file, ".txt"), []byte(str), 0600)
+		err = os.WriteFile(replaceExt(file, ".txt"), []byte(str), 0600)
 		panicIf(err)
 	}
 }

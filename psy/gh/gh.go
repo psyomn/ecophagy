@@ -55,12 +55,12 @@ package gh
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/psyomn/ecophagy/psy/common"
 
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 func usage(fs *flag.FlagSet) error {
@@ -139,7 +139,7 @@ func parseLabelConfig(path string) (*labelActions, error) {
 		return nil, err
 	}
 
-	contents, err := ioutil.ReadAll(fh)
+	contents, err := io.ReadAll(fh)
 	if err != nil {
 		return nil, err
 	}

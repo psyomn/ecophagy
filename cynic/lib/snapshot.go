@@ -22,8 +22,8 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -113,7 +113,7 @@ func (s *SnapshotStore) encodeToFile(path string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, buffer.Bytes(), 0600)
+	return os.WriteFile(path, buffer.Bytes(), 0600)
 }
 
 func (s *SnapshotStore) clear() {

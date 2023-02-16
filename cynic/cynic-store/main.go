@@ -22,11 +22,10 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
-	"github.com/psyomn/ecophagy/cynic/lib"
+	cynic "github.com/psyomn/ecophagy/cynic/lib"
 )
 
 type session struct {
@@ -52,7 +51,7 @@ func main() {
 
 	var buff bytes.Buffer
 
-	dat, err := ioutil.ReadFile(sess.inFile)
+	dat, err := os.ReadFile(sess.inFile)
 	if err != nil {
 		log.Fatal("problem opening file:", sess.inFile, ":", err)
 		os.Exit(1)

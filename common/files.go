@@ -1,8 +1,7 @@
 package common
 
 import (
-	// TODO: go 1.16 should just use io (see go doc ioutil)
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 )
@@ -14,7 +13,7 @@ func FileToBytes(filename string) ([]byte, error) {
 	}
 	defer fs.Close()
 
-	bytes, err := ioutil.ReadAll(fs)
+	bytes, err := io.ReadAll(fs)
 	return bytes, err
 }
 

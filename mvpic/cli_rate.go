@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -66,13 +65,13 @@ first line is your rating. you can leave any comments below.
 		pattern = AppName
 	)
 
-	f, err := ioutil.TempFile(dataPath(), AppName)
+	f, err := os.CreateTemp(dataPath(), AppName)
 	if err != nil {
 		panic(err)
 	}
 	defer os.Remove(f.Name())
 
-	err = ioutil.WriteFile(f.Name(), []byte(sample), 0600)
+	err = os.WriteFile(f.Name(), []byte(sample), 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +89,7 @@ first line is your rating. you can leave any comments below.
 		panic(err)
 	}
 
-	maybeContents, err := ioutil.ReadFile(f.Name())
+	maybeContents, err := os.ReadFile(f.Name())
 	if err != nil {
 		panic(err)
 	}

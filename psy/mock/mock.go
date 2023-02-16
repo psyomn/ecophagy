@@ -20,7 +20,7 @@ package mock
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -30,7 +30,7 @@ import (
 
 	"github.com/psyomn/ecophagy/psy/common"
 
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 type record struct {
@@ -231,7 +231,7 @@ func readFile(path string) ([]byte, error) {
 	}
 	defer file.Close()
 
-	data, err := ioutil.ReadAll(file)
+	data, err := io.ReadAll(file)
 	return data, err
 }
 

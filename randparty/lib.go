@@ -5,7 +5,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -36,7 +35,7 @@ func createDefaultConfig() error {
 		return err
 	}
 
-	return ioutil.WriteFile(configFile(), []byte(defaultConfig), 0600)
+	return os.WriteFile(configFile(), []byte(defaultConfig), 0600)
 }
 
 func main() {

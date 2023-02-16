@@ -21,14 +21,14 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/psyomn/ecophagy/cynic/lib"
+	cynic "github.com/psyomn/ecophagy/cynic/lib"
 )
 
 func TestCRUD(t *testing.T) {
@@ -133,7 +133,7 @@ func TestRestEndpoint(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	text, err := ioutil.ReadAll(resp.Body)
+	text, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal("error reading all:", err)
 	}

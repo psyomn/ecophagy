@@ -31,7 +31,6 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -115,7 +114,7 @@ func decode(cmdInFile string) *memoStore {
 		return memoStoreNew()
 	}
 
-	dat, err := ioutil.ReadFile(cmdInFile)
+	dat, err := os.ReadFile(cmdInFile)
 	if err != nil {
 		log.Fatal("problem opening file:", cmdInFile, ":", err)
 		os.Exit(1)
