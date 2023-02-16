@@ -19,7 +19,8 @@ func HasExifTool() bool {
 }
 
 // Wrapper for actual command:
-//   exiftool -s -s -s -comment picture.jpg
+//
+//	exiftool -s -s -s -comment picture.jpg
 func GetExifComment(filename string) (string, error) {
 	out, err := exec.Command(
 		"exiftool", "-s", "-s", "-s",
@@ -33,7 +34,8 @@ func GetExifComment(filename string) (string, error) {
 }
 
 // Wrapper for actual command:
-//   exiftool -comment="blargh" picture.jpg
+//
+//	exiftool -comment="blargh" picture.jpg
 func SetExifComment(filename string, comment string) error {
 	cmdComment := fmt.Sprintf("-comment=%s", comment)
 	_, err := exec.Command("exiftool", cmdComment, filename).Output()

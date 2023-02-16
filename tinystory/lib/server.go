@@ -8,6 +8,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/psyomn/ecophagy/common"
 )
@@ -58,8 +59,9 @@ func ServerNew(sess *Session, documents []Document) (*Server, error) {
 		indexTemplate: indexTemplate,
 		storyTemplate: storyTemplate,
 		httpServer: &http.Server{
-			Addr:    sess.Host + ":" + sess.Port,
-			Handler: muxer,
+			Addr:              sess.Host + ":" + sess.Port,
+			Handler:           muxer,
+			ReadHeaderTimeout: time.Second * 10,
 		},
 		visitor: VisitorNew(documents),
 	}

@@ -5,7 +5,7 @@ import (
 	"context"
 	"time"
 
-	// nolint:gosec // see below usage
+	//nolint:gosec // see below usage
 	"crypto/md5"
 
 	"errors"
@@ -118,7 +118,7 @@ func FileToMd5Sum(path string) (string, error) {
 	}
 	defer fh.Close()
 
-	// nolint:gosec // security not important; speed is
+	//nolint:gosec // security not important; speed is
 	hash := md5.New()
 	if _, err := io.Copy(hash, fh); err != nil {
 		return "", err

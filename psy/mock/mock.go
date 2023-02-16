@@ -7,7 +7,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import (
 	"os"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/psyomn/ecophagy/psy/common"
 
@@ -183,20 +184,26 @@ func createTCP(port int, ret interface{}, wg *sync.WaitGroup) {
 
 func createHTTP(port int, ret interface{}, root string, wg *sync.WaitGroup) {
 	val := processReturn(ret)
-	server := http.NewServeMux()
 
-	server.HandleFunc(root, func(w http.ResponseWriter, req *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(root, func(w http.ResponseWriter, req *http.Request) {
 		if _, err := w.Write(val); err != nil {
 			log.Println(err)
 		}
 	})
+
+	server := &http.Server{
+		Addr:              fmt.Sprintf(":%d", port),
+		ReadHeaderTimeout: 10 * time.Second,
+		Handler:           mux,
+	}
 
 	go func(wait *sync.WaitGroup) {
 		if wait != nil {
 			defer wg.Done()
 		}
 
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), server))
+		log.Fatal(server.ListenAndServe())
 	}(wg)
 }
 

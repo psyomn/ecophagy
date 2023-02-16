@@ -8,7 +8,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +51,8 @@ func isSupportedFormat(name string) bool {
 
 // SortByModTime will detect files with designated formats and place
 // them chronologically in an output directory, in the form of:
-//   $OUTDIR/username/yyyy/mm/
+//
+//	$OUTDIR/username/yyyy/mm/
 func SortByModTime(dirPath, outDir string) {
 	userStr, _ := common.GetUserName()
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {

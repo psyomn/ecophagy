@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"time"
 
 	"github.com/psyomn/ecophagy/common"
 	"github.com/psyomn/ecophagy/img"
@@ -91,8 +92,13 @@ func main() {
 	// Browser
 	httpServer.HandleFunc("/browse", controller.handleBrowse)
 
-	addr := fmt.Sprintf("127.0.0.1:%s", fls.config.Port)
-	err = http.ListenAndServe(addr, httpServer)
+	server := &http.Server{
+		Addr:              fmt.Sprintf("127.0.0.1:%s", fls.config.Port),
+		ReadHeaderTimeout: time.Second * 10,
+		Handler:           httpServer,
+	}
+
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}

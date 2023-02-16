@@ -17,7 +17,7 @@ func TestPartsOfURLSafeSimple(t *testing.T) {
 	}
 
 	// TODO: think about a better way to do this in the future
-	// nolint
+	//nolint
 	makeTestFn := func(tc *tc, upt *testing.T) func(t *testing.T) {
 		return func(t *testing.T) {
 			parts, err := PartsOfURLSafe(tc.input)
@@ -51,7 +51,7 @@ func TestPartsOfURLSafeDirectoryTraversalAttempt(t *testing.T) {
 	}
 
 	// TODO: think about a better way to do this in the future
-	// nolint
+	//nolint
 	makeTestFn := func(tc *tc, upt *testing.T) func(t *testing.T) {
 		return func(t *testing.T) {
 			val, err := PartsOfURLSafe(tc.input)

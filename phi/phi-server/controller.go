@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -279,7 +279,11 @@ viewDirs:
 		if files, err := filepath.Glob(userPath + "/*"); err != nil {
 			respondWithError(w, err)
 		} else {
-			respJSON, _ := json.Marshal(&listDirsResponse{Dirs: files})
+			respJSON, err := json.Marshal(&listDirsResponse{Dirs: files})
+			if err != nil {
+				log.Println(err)
+			}
+
 			w.WriteHeader(http.StatusOK)
 			if _, err := w.Write(respJSON); err != nil {
 				log.Println(err)
@@ -302,7 +306,10 @@ viewFiles:
 			return
 		}
 
-		respJSON, _ := json.Marshal(&listFilesResponse{Files: files})
+		respJSON, err := json.Marshal(&listFilesResponse{Files: files})
+		if err != nil {
+			log.Println(err)
+		}
 		w.WriteHeader(http.StatusOK)
 
 		if _, err := w.Write(respJSON); err != nil {

@@ -84,7 +84,7 @@ func (s *Parser) Current() *Token {
 func (s *Parser) Execute() {
 	for s.cursor < len(s.tokens) {
 		/* top level keywords go here */
-		// nolint
+		//nolint
 		switch s.Current().Type {
 		case TokenKeywordTitle:
 			s.ParseTitle()

@@ -45,7 +45,7 @@ func TestTinyStoryFormat(t *testing.T) {
 
 	for index := range tcs {
 		t.Run(tcs[index].name, func(t *testing.T) {
-			// nolint:scopelint // succint tests good
+			//nolint:scopelint // succint tests good
 			doc, err := ParseTinyStoryFormatFile(tcs[index].path)
 
 			if doc == nil {

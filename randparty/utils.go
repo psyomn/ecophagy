@@ -9,7 +9,10 @@ import (
 )
 
 func initializeRandEngine() {
-	mrand.Seed(time.Now().Unix())
+	// we don't care for strength because this app just wants to shuffle
+	// things, not be crypto secure.
+	//nolint
+	mrand.New(mrand.NewSource(time.Now().Unix()))
 }
 
 func sampleArray(arr []string) string {
@@ -23,8 +26,8 @@ func sampleArray(arr []string) string {
 	// maybe the sequences that are going to show up will not be as
 	// unique, but again, I don't think it's worth investing on this
 	// subject...
-	//
-	// nolint
+
+	//nolint
 	index := mrand.Intn(len(arr))
 	return arr[index]
 }

@@ -56,7 +56,6 @@ func cliRate(id string) {
 //
 // 8
 // this was a very interesting movie wow
-//
 func rateThroughEditor(ri *ratingInfo) {
 	const (
 		sample = `10
@@ -78,7 +77,7 @@ first line is your rating. you can leave any comments below.
 
 	// TODO -- wonder if there's something less drastic than doing a
 	// disable here
-	// nolint
+	//nolint
 	cmd := exec.Command(common.Editor(), f.Name())
 	fmt.Println(cmd)
 	cmd.Stdout = os.Stdout

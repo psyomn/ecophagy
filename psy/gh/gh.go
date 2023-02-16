@@ -5,36 +5,35 @@ It's not supposed to do everything. My specific use is to set github
 labels, according to a configuration that I think is OK.
 
 usage:
-  psy gh test-labels <config.yaml> <owner> <repo>
-    will do a dry run of label nomenclature application
 
-  psy gh poison <config.yaml> <owner> <repo>
-    will edit the labels to respect the given specs.
+	psy gh test-labels <config.yaml> <owner> <repo>
+	  will do a dry run of label nomenclature application
 
+	psy gh poison <config.yaml> <owner> <repo>
+	  will edit the labels to respect the given specs.
 
 The config file should look something like this:
 
-  ---
-  # Github label configuration.
+	---
+	# Github label configuration.
 
-  # T = Type
-  # L = Lifecycle
+	# T = Type
+	# L = Lifecycle
 
-  rename:
-    bug:         ["T-bug",       "a00000", "A software fault or failure"]
-    duplicate:   ["L-duplicate", "16336d", "dOops!"]
-    enhancement: ["T-upkeep",    "009a00", "Anything that rejuvenates"]
-    invalid:     ["L-invalid",   "ffbb0e", "Anything that is invalid"]
-    question:    ["T-question",  "ffaa99", "Questions are good!"]
-    wontfix:     ["L-wontfix",   "231f20", "Things not to fix"]
+	rename:
+	  bug:         ["T-bug",       "a00000", "A software fault or failure"]
+	  duplicate:   ["L-duplicate", "16336d", "dOops!"]
+	  enhancement: ["T-upkeep",    "009a00", "Anything that rejuvenates"]
+	  invalid:     ["L-invalid",   "ffbb0e", "Anything that is invalid"]
+	  question:    ["T-question",  "ffaa99", "Questions are good!"]
+	  wontfix:     ["L-wontfix",   "231f20", "Things not to fix"]
 
-  create:
-    - ["T-perf",    "f51919", "Anything concerning perf"]
-    - ["T-feature", "078a00", "Anything that is adds new behavior"]
-    - ["T-doc",     "001c8a", "Anything that adds documentation"]
-    - ["T-hotfix",  "ff5100", "Critical things to deploy"]
-    - ["L-ready",   "ffe100", "Anything ready for merging and releasing"]
-
+	create:
+	  - ["T-perf",    "f51919", "Anything concerning perf"]
+	  - ["T-feature", "078a00", "Anything that is adds new behavior"]
+	  - ["T-doc",     "001c8a", "Anything that adds documentation"]
+	  - ["T-hotfix",  "ff5100", "Critical things to deploy"]
+	  - ["L-ready",   "ffe100", "Anything ready for merging and releasing"]
 
 Copyright 2020 Simon Symeonidis (psyomn)
 
@@ -42,7 +41,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,

@@ -62,7 +62,7 @@ func MakeDBFromCSV(dbpath, csvpath, csvFilename string) error {
 	for {
 		line, err := reader.Read()
 
-		// nolint
+		//nolint
 		if errors.Is(err, io.EOF) {
 			break // done
 		} else if errors.Is(err, csv.ErrTrailingComma) ||

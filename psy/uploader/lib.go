@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/psyomn/ecophagy/psy/common"
 )
@@ -58,9 +59,17 @@ func Run(_ common.RunParams) common.RunReturn {
 		fmt.Println(" ", ip.To4().String())
 	}
 
-	http.HandleFunc("/", upload)
-	http.HandleFunc("/upload", upload)
-	log.Fatal(http.ListenAndServe(port, nil))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", upload)
+	mux.HandleFunc("/upload", upload)
+
+	server := &http.Server{
+		Addr:              port,
+		ReadHeaderTimeout: time.Second * 10,
+		Handler:           mux,
+	}
+
+	log.Fatal(server.ListenAndServe())
 
 	return nil
 }
