@@ -6,6 +6,9 @@ install:
 test:
 	go test ./...
 
+deps-list-upgrades:
+	go list -u -m all
+
 lint:
 	golangci-lint run
 
