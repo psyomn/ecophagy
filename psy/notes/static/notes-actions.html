@@ -1,0 +1,5 @@
+{{define "notes-actions"}}
+[ <a href="/notes/view/{{ .ID }}">view</a> |
+  <a href="/notes/edit/{{ .ID }}">edit</a> |
+  <a href="#{{ .ID }}" onClick="if (confirm('delete this item?')) { window.location.href = '/notes/destroy/{{ .ID }}'}">delete</a> ]
+{{end}}

@@ -1,0 +1,35 @@
+<html>
+        <head> {{template "head" .}} </head>
+        <body>
+                <div id="menu"> {{template "menus" .}} </div>
+
+                <div id="body" style="border: 1px solid #aaaaaa;">
+                        <table>
+                                <tr>
+                                        <th>date</th>
+                                        <th>title</th>
+                                        <th>comment</th>
+                                        <th>public</th>
+                                        <th>action</th>
+                                </tr>
+                                {{range .Notes }}
+                                <tr>
+                                        <td>{{hdate .CreatedAt }}</td>
+                                        <td>{{ .Title }}</td>
+                                        <td>{{ .Comment }}</td>
+                                        <td>
+                                                {{ if eq .ViewMode 1 }}✓[ <a href="/notes/hide/{{ .ID }}">hide</a> ]
+                                                {{ else }}🔒[ <a href="/notes/publish/{{ .ID }}">publish</a> ]
+                                                {{ end }}
+                                        </td>
+                                        <td>{{template "notes-actions" .}}</td>
+                                </tr>
+                                {{ else }}
+                                <tr>
+                                        <td colspan=5> no notes </td>
+                                </tr>
+                                {{ end }}
+                        </table>
+                </div>
+        </body>
+</html>

@@ -1,0 +1,29 @@
+<html>
+        <head> {{template "head" .}} </head>
+        <body>
+                <div id="menu"> {{template "menus" .}} </div>
+
+                <div>
+                        <h1> psy-notes </h1>
+                        <p> all your notes in a non resource glutonous application </p>
+
+                        <p> please note: this is not an application designed around security: treat the information you put in your
+                        notes as open postcards to be read by anyone.  This is more of an experiment than a finished product.</p>
+
+                        <p> To create a new user, run this command in the same directory of the sqlite3 database: <br/>
+                        <code> psy-notes --register youruser:password </code> </p>
+                </div>
+
+                <div>
+                        <h2> public notes </h2>
+                        <ul>
+                                {{ range .Notes }}
+                                <li><a href="/public/{{ .ID }}">{{ .Title }}</a>: {{ .Comment }} [<b>{{ .Username }}</b>] - [{{hdate .CreatedAt }}] </li>
+                                {{ else }}
+                                <li> No new public notes :( </li>
+                                {{ end }}
+                        </ul>
+
+                </div>
+        </body>
+</html>

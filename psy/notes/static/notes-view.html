@@ -1,0 +1,22 @@
+<html>
+        <head> {{template "head" .}} </head>
+        <body>
+                <div id="menu">{{template "menus" .}}</div>
+
+                {{ range .Notes }}
+                <div id="note">
+                        <h1> {{ .Title }} </h1>
+                        {{ if .Username }}
+                                <h2> {{ .Username }} </h2>
+                        {{ end }}
+                        <p> <b> created </b>: {{hdate .CreatedAt }} </p>
+                        <p> <b> updated </b>: {{hdate .UpdatedAt }} </p>
+                        <blockquote> Comment: {{ .Comment }} </blockquote>
+                        <code id="note-view">{{ .Contents }}</code>
+                </div>
+                <div>
+                        {{ template "notes-actions" .}}
+                </div>
+                {{ end }}
+        </body>
+</html>

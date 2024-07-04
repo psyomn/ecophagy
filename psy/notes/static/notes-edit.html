@@ -1,0 +1,39 @@
+<html>
+        <head> {{template "head" .}} </head>
+        <body>
+                <div id="menu">{{template "menus" .}}</div>
+
+                {{ range .Notes }}
+                <div id="note">
+                        {{ if eq .ID 0 }}
+                        <form method="post" action="/notes/new">
+                        {{ else }}
+                        <form method="post" action="/notes/update/{{ .ID }}">
+                        {{ end }}
+                                <div>
+                                        <p>
+                                                <input width="120px" type="text" id="title" name="title" value="{{ .Title }}" />
+                                                <label for="title">Title</label>
+                                        </p>
+                                </div>
+                                <div>
+                                        <p>
+                                                <input width="120px" type="text" id="comment" name="comment" value="{{ .Comment }}" />
+                                                <label for="comment">Comment</label>
+                                        </p>
+                                </div>
+
+                                <div> <p>your brainrot here:</p> </div>
+                                <div> <textarea name="contents" cols="100" rows="30" id="contents">{{ .Contents }}</textarea> </div>
+                                <div>
+                                        <input type="radio" name="view_mode" id="view_mode_private" value="0" {{ if eq .ViewMode 0 }} checked {{ end }} />
+                                        <label for="view_mode_private"> private </label>
+                                        <input type="radio" name="view_mode" id="view_mode_public" value="1" {{ if eq .ViewMode 1 }} checked {{ end }}/>
+                                        <label for="view_mode_public"> public </label>
+                                </div>
+                                <div> <input type="submit" /> </div>
+                        </form>
+                </div>
+                {{ end }}
+        </body>
+</html>

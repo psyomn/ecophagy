@@ -1,0 +1,17 @@
+{{define "menus"}}
+        {{ if .User }}
+        <div id="menu">
+                <span> <b>{{ .User.Name }} </b> </span>
+                <span> [<a href="/logout">logout</a>] </span>
+                <span> links: [<a href="/">home</a>|<a href="/notes/new">new note</a>|<a href="/notes">notes</a>] </span>
+        </div>
+        {{ else }}
+        <form method="post" action="/login">
+                <span> username </span>
+                <span> <input type="text" id="username" name="username" /> </span>
+                <span> password </span>
+                <span> <input type="password" name="password" /> </span>
+                <span> <input type="submit"/> </span>
+        </form>
+        {{ end }}
+{{end}}
