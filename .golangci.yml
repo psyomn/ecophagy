@@ -42,7 +42,7 @@ linters:
 
     # disabled by default
     # - cyclop
-    - depguard
+    # - depguard
     - dogsled
     # - exhaustivestruct
     # - forbidigo
@@ -56,7 +56,7 @@ linters:
     - gocyclo
     # - godot
     # - godox
-    - goerr113
+    - err113
     - gofmt
     # - gofumpt
     # - goimports
@@ -74,7 +74,6 @@ linters:
     - nolintlint
     # - paralleltest # TODO: might be good to investigate
     - predeclared
-    - revive
     - stylecheck
     # - testpackage
     # - thelper
@@ -86,8 +85,7 @@ linters:
     # - wsl
 
   disable:
-    - scopelint
-    - golint # deprecated
+    - revive
   disable-all: false
   presets:
     - bugs
