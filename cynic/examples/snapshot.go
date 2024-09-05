@@ -24,7 +24,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/psyomn/cacophagy/cynic/lib"
+	"git.sr.ht/~psyomn/ecophagy//cacophagy/cynic/lib"
 )
 
 func main() {

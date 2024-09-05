@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/psyomn/ecophagy/psy/notes/models"
-	"github.com/psyomn/ecophagy/psy/notes/static"
+	"git.sr.ht/~psyomn/ecophagy/psy/notes/models"
+	"git.sr.ht/~psyomn/ecophagy/psy/notes/static"
 )
 
 const CookieSessionName = "Psy-Notes-Session"

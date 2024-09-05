@@ -22,7 +22,7 @@ limitations under the License.
 
 package main
 
-import "github.com/psyomn/ecophagy/psy/uploader"
+import "git.sr.ht/~psyomn/ecophagy/psy/uploader"
 
 func main() {
 	uploader.Run(nil)

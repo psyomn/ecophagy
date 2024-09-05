@@ -57,7 +57,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
 
 	"gopkg.in/yaml.v3"
 )

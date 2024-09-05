@@ -20,7 +20,7 @@ package barf
 import (
 	"fmt"
 
-	"github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
 )
 
 var runCommands = map[string]func(common.RunParams) common.RunReturn{

@@ -7,9 +7,9 @@ import (
 	"path"
 	"strings"
 
-	psycommon "github.com/psyomn/ecophagy/psy/common"
-	"github.com/psyomn/ecophagy/psy/notes/models"
-	"github.com/psyomn/ecophagy/psy/notes/storage"
+	psycommon "git.sr.ht/~psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/notes/models"
+	"git.sr.ht/~psyomn/ecophagy/psy/notes/storage"
 
 	_ "github.com/mattn/go-sqlite3"
 )

@@ -23,7 +23,7 @@ package main
 import (
 	"log"
 
-	"github.com/psyomn/ecophagy/cynic/lib"
+	"git.sr.ht/~psyomn/ecophagy/cynic/lib"
 )
 
 func main() {

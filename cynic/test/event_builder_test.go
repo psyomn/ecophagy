@@ -19,7 +19,7 @@ package test
 import (
 	"testing"
 
-	"github.com/psyomn/ecophagy/cynic/lib"
+	"git.sr.ht/~psyomn/ecophagy/cynic/lib"
 )
 
 func TestSimpleBuilder(t *testing.T) {

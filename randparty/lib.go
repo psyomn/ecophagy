@@ -9,7 +9,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/psyomn/ecophagy/common"
+	"git.sr.ht/~psyomn/ecophagy/common"
 )
 
 const (

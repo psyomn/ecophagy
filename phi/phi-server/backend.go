@@ -28,8 +28,8 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/psyomn/ecophagy/common"
-	"github.com/psyomn/ecophagy/img"
+	"git.sr.ht/~psyomn/ecophagy/common"
+	"git.sr.ht/~psyomn/ecophagy/img"
 
 	"golang.org/x/crypto/bcrypt"
 )

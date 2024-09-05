@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/psyomn/ecophagy/tinystory/lib"
+	"git.sr.ht/~psyomn/ecophagy/tinystory/lib"
 )
 
 func makeFlags(sess *tinystory.Session) {

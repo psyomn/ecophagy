@@ -24,7 +24,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/psyomn/ecophagy/cynic/lib"
+	"git.sr.ht/~psyomn/ecophagy/cynic/lib"
 )
 
 type alertInfo struct {

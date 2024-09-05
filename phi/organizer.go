@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/psyomn/ecophagy/common"
+	"git.sr.ht/~psyomn/ecophagy/common"
 )
 
 var supportedFormats = [...]string{

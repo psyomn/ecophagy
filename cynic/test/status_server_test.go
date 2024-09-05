@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	cynic "github.com/psyomn/ecophagy/cynic/lib"
+	cynic "git.sr.ht/~psyomn/ecophagy/cynic/lib"
 )
 
 func TestCRUD(t *testing.T) {

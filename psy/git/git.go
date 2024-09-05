@@ -24,7 +24,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
 
 	"github.com/Masterminds/semver"
 )

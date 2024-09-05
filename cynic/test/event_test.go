@@ -25,7 +25,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/psyomn/ecophagy/cynic/lib"
+	"git.sr.ht/~psyomn/ecophagy/cynic/lib"
 )
 
 func TestEventIdIncreaseMonotonically(t *testing.T) {

@@ -25,7 +25,7 @@ import (
 	"log"
 	"os"
 
-	cynic "github.com/psyomn/ecophagy/cynic/lib"
+	cynic "git.sr.ht/~psyomn/ecophagy/cynic/lib"
 )
 
 type session struct {

@@ -37,8 +37,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/psyomn/ecophagy/common"
-	psycommon "github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/common"
+	psycommon "git.sr.ht/~psyomn/ecophagy/psy/common"
 )
 
 func memoDirPath() string      { return path.Join(common.ConfigDir(), "memo") }

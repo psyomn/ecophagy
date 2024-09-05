@@ -21,7 +21,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
 )
 
 var (

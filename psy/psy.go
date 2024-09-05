@@ -22,15 +22,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/psyomn/ecophagy/psy/barf"
-	"github.com/psyomn/ecophagy/psy/common"
-	"github.com/psyomn/ecophagy/psy/filebucket"
-	"github.com/psyomn/ecophagy/psy/gh"
-	"github.com/psyomn/ecophagy/psy/git"
-	"github.com/psyomn/ecophagy/psy/memo"
-	"github.com/psyomn/ecophagy/psy/mock"
-	"github.com/psyomn/ecophagy/psy/notes"
-	"github.com/psyomn/ecophagy/psy/uploader"
+	"git.sr.ht/~psyomn/ecophagy/psy/barf"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/filebucket"
+	"git.sr.ht/~psyomn/ecophagy/psy/gh"
+	"git.sr.ht/~psyomn/ecophagy/psy/git"
+	"git.sr.ht/~psyomn/ecophagy/psy/memo"
+	"git.sr.ht/~psyomn/ecophagy/psy/mock"
+	"git.sr.ht/~psyomn/ecophagy/psy/notes"
+	"git.sr.ht/~psyomn/ecophagy/psy/uploader"
 )
 
 type command struct {

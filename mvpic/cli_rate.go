@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/psyomn/ecophagy/common"
+	"git.sr.ht/~psyomn/ecophagy/common"
 
 	_ "github.com/mattn/go-sqlite3"
 )

@@ -3,7 +3,7 @@ package tinystory
 import (
 	"testing"
 
-	"github.com/psyomn/ecophagy/common"
+	"git.sr.ht/~psyomn/ecophagy/common"
 )
 
 const (

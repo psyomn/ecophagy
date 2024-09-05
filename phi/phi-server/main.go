@@ -25,9 +25,9 @@ import (
 	"path"
 	"time"
 
-	"github.com/psyomn/ecophagy/common"
-	"github.com/psyomn/ecophagy/img"
-	"github.com/psyomn/ecophagy/phi/config"
+	"git.sr.ht/~psyomn/ecophagy/common"
+	"git.sr.ht/~psyomn/ecophagy/img"
+	"git.sr.ht/~psyomn/ecophagy/phi/config"
 )
 
 const (

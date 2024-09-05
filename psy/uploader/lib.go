@@ -23,7 +23,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
 )
 
 const (

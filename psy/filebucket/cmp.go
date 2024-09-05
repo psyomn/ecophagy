@@ -28,7 +28,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
 )
 
 type pathWithHash struct {

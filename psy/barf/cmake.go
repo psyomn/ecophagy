@@ -27,7 +27,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/psyomn/ecophagy/psy/common"
+	"git.sr.ht/~psyomn/ecophagy/psy/common"
 )
 
 func cmake(args common.RunParams) common.RunReturn {

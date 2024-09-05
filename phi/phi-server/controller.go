@@ -26,8 +26,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/psyomn/ecophagy/common"
-	"github.com/psyomn/ecophagy/phi/phi-server/static"
+	"git.sr.ht/~psyomn/ecophagy/common"
+	"git.sr.ht/~psyomn/ecophagy/phi/phi-server/static"
 )
 
 type controller struct {
