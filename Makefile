@@ -19,6 +19,9 @@ linter-install:
 linter-releases:
 	curl -s https://api.github.com/repos/golangci/golangci-lint/releases | jq -r '.[] | .tag_name,.body' | less
 
+gopls-install:
+	go install golang.org/x/tools/gopls@latest
+
 GOOSE_VERSION=latest
 goose-install:
 	go install github.com/pressly/goose/v3/cmd/goose@$(GOOSE_VERSION)
