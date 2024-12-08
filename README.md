@@ -1,5 +1,7 @@
 # Ecophagy
 
+New commits are pushed only to: <https://git.sr.ht/~psyomn/ecophagy>.
+
 ![Ecophagy](ecophagy.png)
 
 Logo designed by [SunnySummerSkye](https://www.instagram.com/sunnysummerskye/).
